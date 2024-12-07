@@ -1,0 +1,45 @@
+// 初始化用戶資料庫
+const userDatabase = JSON.parse(localStorage.getItem('userDatabase')) || {};
+
+// 更新本地存儲的數據
+function saveToLocalStorage() {
+  localStorage.setItem('userDatabase', JSON.stringify(userDatabase));
+}
+
+// 註冊功能
+registerButton.addEventListener('click', () => {
+  const code = registerCodeInput.value;
+  const password = registerPasswordInput.value;
+
+  if (userDatabase[code]) {
+    registerMessage.textContent = "該代碼已被註冊！";
+  } else {
+    userDatabase[code] = { password, points: 0, lastCheckin: null };
+    registerMessage.textContent = "註冊成功！";
+    saveToLocalStorage(); // 保存到 LocalStorage
+  }
+  registerMessage.classList.remove('hidden');
+});
+
+// 簽到功能
+checkinButton.addEventListener('click', () => {
+  const code = checkinCodeInput.value;
+  const password = checkinPasswordInput.value;
+
+  if (!userDatabase[code]) {
+    checkinMessage.textContent = "代碼不存在！";
+  } else if (userDatabase[code].password !== password) {
+    checkinMessage.textContent = "密碼錯誤！";
+  } else {
+    const today = new Date().toISOString().split('T')[0];
+    if (userDatabase[code].lastCheckin === today) {
+      checkinMessage.textContent = "您今天已經簽到過了！";
+    } else {
+      userDatabase[code].points += 1;
+      userDatabase[code].lastCheckin = today;
+      checkinMessage.textContent = "簽到成功！+1 點數";
+      saveToLocalStorage(); // 保存到 LocalStorage
+    }
+  }
+  checkinMessage.classList.remove('hidden');
+});
