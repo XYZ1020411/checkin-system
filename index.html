@@ -93,11 +93,6 @@
     let userDatabase = {}; // 代碼 -> {password, points, signedIn}
     let redeemRecords = {}; // 代碼 -> {item, used, barcodeUrl}
 
-    // 特殊用戶（無限點數）
-    const specialUsers = {
-      "1234": { password: "001", points: Infinity, signedIn: false } // 1234代碼和密碼001擁有無限點數
-    };
-
     // 註冊功能
     document.getElementById("register-button").addEventListener("click", () => {
       const code = document.getElementById("register-code").value;
@@ -124,20 +119,15 @@
       const password = document.getElementById("signin-password").value;
       const message = document.getElementById("signin-message");
 
-      if (!userDatabase[code] && !specialUsers[code]) {
+      if (!userDatabase[code]) {
         message.textContent = "代碼不存在，請先註冊！";
-      } else if ((userDatabase[code] && userDatabase[code].password !== password) || (specialUsers[code] && specialUsers[code].password !== password)) {
+      } else if (userDatabase[code].password !== password) {
         message.textContent = "密碼錯誤，請重試！";
-      } else if (userDatabase[code]?.signedIn || specialUsers[code]?.signedIn) {
+      } else if (userDatabase[code].signedIn) {
         message.textContent = "今天已經簽到過了！";
       } else {
-        if (specialUsers[code]) {
-          // 無限點數的用戶
-          specialUsers[code].signedIn = true;
-        } else {
-          userDatabase[code].signedIn = true;
-          userDatabase[code].points += 1; // 簽到增加1點
-        }
+        userDatabase[code].signedIn = true;
+        userDatabase[code].points += 1; // 簽到增加1點
         message.textContent = "簽到成功！您的點數增加了1點。";
         saveToLocalStorage();
       }
@@ -150,13 +140,12 @@
       const password = document.getElementById("view-password").value;
       const message = document.getElementById("view-message");
 
-      if (!userDatabase[code] && !specialUsers[code]) {
+      if (!userDatabase[code]) {
         message.textContent = "代碼不存在，請先註冊！";
-      } else if ((userDatabase[code] && userDatabase[code].password !== password) || (specialUsers[code] && specialUsers[code].password !== password)) {
+      } else if (userDatabase[code].password !== password) {
         message.textContent = "密碼錯誤，請重試！";
       } else {
-        let points = userDatabase[code]?.points || specialUsers[code]?.points;
-        message.textContent = `您的點數：${points === Infinity ? "無限" : points}`;
+        message.textContent = `您的點數：${userDatabase[code].points}`;
       }
 
       message.classList.remove("hidden");
@@ -169,33 +158,21 @@
       const [cost, itemName] = document.getElementById('item-select').value.split("|");
       const message = document.getElementById('redeem-message');
 
-      if (!userDatabase[code] && !specialUsers[code]) {
+      if (!userDatabase[code]) {
         message.textContent = "代碼不存在，請先註冊！";
-      } else if ((userDatabase[code] && userDatabase[code].password !== password) || (specialUsers[code] && specialUsers[code].password !== password)) {
+      } else if (userDatabase[code].password !== password) {
         message.textContent = "密碼錯誤，請重試！";
+      } else if (userDatabase[code].points < cost) {
+        message.textContent = "點數不足，無法兌換該商品。";
       } else {
-        let userPoints = userDatabase[code]?.points || specialUsers[code]?.points;
+        userDatabase[code].points -= cost; // 扣除點數
+        const uniqueId = `${code}-${Date.now()}`;
+        const barcodeUrl = `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(uniqueId)}&size=200x200`;
+        redeemRecords[uniqueId] = { code, itemName, used: false, barcodeUrl };
+        message.textContent = `兌換成功！${itemName} 條碼已生成！`;
+        generateBarcode(uniqueId);  // 生成條碼
 
-        if (userPoints === Infinity) {
-          // 無限點數的用戶，直接兌換
-          const uniqueId = `${code}-${Date.now()}`;
-          const barcodeUrl = `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(uniqueId)}&size=200x200`;
-          redeemRecords[uniqueId] = { code, itemName, used: false, barcodeUrl };
-          message.textContent = `無限點數用戶兌換成功！${itemName} 條碼已生成！`;
-          generateBarcode(uniqueId);  // 生成條碼
-          saveToLocalStorage();
-        } else if (userPoints >= cost) {
-          // 有足夠點數的用戶
-          userDatabase[code].points -= cost; // 扣除點數
-          const uniqueId = `${code}-${Date.now()}`;
-          const barcodeUrl = `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(uniqueId)}&size=200x200`;
-          redeemRecords[uniqueId] = { code, itemName, used: false, barcodeUrl };
-          message.textContent = `兌換成功！${itemName} 條碼已生成！`;
-          generateBarcode(uniqueId);  // 生成條碼
-          saveToLocalStorage();
-        } else {
-          message.textContent = "點數不足，無法兌換該商品。";
-        }
+        saveToLocalStorage();
       }
 
       message.classList.remove('hidden');
@@ -227,4 +204,49 @@
 
       // 添加元素到條碼區域
       barcodeItem.appendChild(barcodeImage);
-      barc
+      barcodeItem.appendChild(barcodeText);
+      barcodeItem.appendChild(useButton);
+      barcodeList.appendChild(barcodeItem);
+    }
+
+    // 更新獎勳區：展示所有未使用的條碼
+    function updateRewardSection() {
+      const barcodeList = document.getElementById('barcode-list');
+      barcodeList.innerHTML = "";  // 清空舊內容
+
+      Object.entries(redeemRecords).forEach(([uniqueId, record]) => {
+        if (!record.used) {
+          generateBarcode(uniqueId);  // 生成並顯示條碼
+        }
+      });
+
+      if (Object.keys(redeemRecords).length === 0 || !Object.values(redeemRecords).some(record => !record.used)) {
+        barcodeList.innerHTML = "<p>目前沒有可用條碼。</p>";
+      }
+    }
+
+    // 儲存用戶資料
+    function saveToLocalStorage() {
+      localStorage.setItem('userDatabase', JSON.stringify(userDatabase));
+      localStorage.setItem('redeemRecords', JSON.stringify(redeemRecords));
+    }
+
+    // 載入本地資料
+    function loadFromLocalStorage() {
+      const savedUserDatabase = JSON.parse(localStorage.getItem('userDatabase'));
+      const savedRedeemRecords = JSON.parse(localStorage.getItem('redeemRecords'));
+
+      if (savedUserDatabase) {
+        userDatabase = savedUserDatabase;
+      }
+      if (savedRedeemRecords) {
+        redeemRecords = savedRedeemRecords;
+      }
+    }
+
+    // 初始載入資料
+    loadFromLocalStorage();
+    updateRewardSection();  // 初始顯示未使用的條碼
+  </script>
+</body>
+</html>
