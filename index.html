@@ -1,194 +1,165 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>每日簽到與兌換系統</title>
+  <title>兌換系統</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      font-size: 18px; /* 增加整體字體大小 */
-      text-align: center;
-      padding: 20px;
-      margin: 0;
     }
     .hidden {
       display: none;
     }
-    .section {
-      margin: 20px auto;
-      padding: 20px;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      max-width: 400px;
-      box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+    .barcode {
+      margin-top: 20px;
+      display: block;
+      width: 200px;
+      height: 50px;
     }
-    h1 {
-      margin-bottom: 30px;
-      font-size: 28px; /* 增加主標題字體大小 */
+    .barcode-list {
+      margin-top: 20px;
     }
-    h2 {
+    .barcode-item {
       margin-bottom: 20px;
-      font-size: 24px; /* 增加副標題字體大小 */
     }
-    input, button, select {
-      margin: 10px 0;
-      padding: 12px; /* 增加控件的內部間距 */
-      width: 90%;
-      box-sizing: border-box;
-      font-size: 18px; /* 控件的字體加大 */
+    .section {
+      margin-bottom: 40px;
     }
-    button {
-      background-color: #007BFF;
-      color: white;
-      border: none;
-      cursor: pointer;
-      border-radius: 4px;
+    input, select, button {
+      margin: 5px 0;
     }
-    button:hover {
-      background-color: #0056b3;
-    }
-    p {
-      margin: 10px 0;
-      font-size: 18px; /* 增加說明文字字體大小 */
-      color: #555;
-    }
-    #barcode-section img {
-      margin-top: 15px;
-    }
-    #reward-section {
-      margin-top: 40px;
-    }
-    #barcode-list {
-      text-align: left;
+    #message {
+      margin-top: 10px;
+      color: red;
     }
   </style>
 </head>
 <body>
-  <h1>每日簽到與兌換系統</h1>
 
-  <!-- 註冊功能 -->
-  <div id="register-section" class="section">
-    <h2>註冊新帳號</h2>
-    <input type="text" id="register-code-input" placeholder="輸入代碼">
-    <input type="password" id="register-password-input" placeholder="輸入密碼">
+  <h1>玩家兌換系統</h1>
+  
+  <!-- 註冊區域 -->
+  <div class="section" id="register-section">
+    <h2>註冊</h2>
+    <input type="text" id="register-code" placeholder="輸入代碼">
+    <input type="password" id="register-password" placeholder="設定密碼">
     <button id="register-button">註冊</button>
     <p id="register-message" class="hidden"></p>
   </div>
-
-  <!-- 簽到功能 -->
-  <div id="checkin-section" class="section">
-    <h2>每日簽到</h2>
-    <input type="text" id="checkin-code-input" placeholder="輸入代碼">
-    <input type="password" id="checkin-password-input" placeholder="輸入密碼">
-    <button id="checkin-button">簽到</button>
-    <p id="checkin-message" class="hidden"></p>
+  
+  <!-- 簽到區域 -->
+  <div class="section" id="signin-section">
+    <h2>簽到</h2>
+    <input type="text" id="signin-code" placeholder="輸入代碼">
+    <input type="password" id="signin-password" placeholder="輸入密碼">
+    <button id="signin-button">簽到</button>
+    <p id="signin-message" class="hidden"></p>
   </div>
 
-  <!-- 查詢點數功能 -->
-  <div id="view-points-section" class="section">
-    <h2>查詢點數</h2>
-    <input type="text" id="view-code-input" placeholder="輸入代碼">
-    <input type="password" id="view-password-input" placeholder="輸入密碼">
-    <button id="view-points-button">查詢點數</button>
-    <p id="view-points-message" class="hidden"></p>
+  <!-- 查看點數區域 -->
+  <div class="section" id="view-section">
+    <h2>查看點數</h2>
+    <input type="text" id="view-code" placeholder="輸入代碼">
+    <input type="password" id="view-password" placeholder="輸入密碼">
+    <button id="view-button">查看</button>
+    <p id="view-message" class="hidden"></p>
   </div>
 
-  <!-- 兌換功能 -->
-  <div id="redeem-section" class="section">
+  <!-- 兌換區域 -->
+  <div class="section" id="redeem-section">
     <h2>兌換商品</h2>
     <input type="text" id="redeem-code-input" placeholder="輸入代碼">
     <input type="password" id="redeem-password-input" placeholder="輸入密碼">
     <select id="item-select">
-      <option value="10|PUPG陪玩票">PUPG陪玩票 - 10點</option>
-      <option value="20|Minecraft陪玩票">Minecraft陪玩票 - 20點</option>
+      <option value="10|PUPG 陪玩票">PUPG 陪玩票 - 10點</option>
+      <option value="20|Minecraft 陪玩票">Minecraft 陪玩票 - 20點</option>
       <option value="30|佳音購物票">佳音購物票 - 30點</option>
     </select>
     <button id="redeem-button">兌換</button>
     <p id="redeem-message" class="hidden"></p>
-    <div id="barcode-section" class="hidden">
-      <h3>您的條碼</h3>
-      <img id="barcode-image" alt="條碼將顯示在此處">
-      <p>掃描條碼以啟用商品</p>
+  </div>
+
+  <!-- 條碼展示區域 -->
+  <div class="section" id="barcode-section">
+    <h2>兌換條碼</h2>
+    <div id="barcode-list" class="barcode-list">
+      <!-- 條碼會在這裡顯示 -->
     </div>
   </div>
 
-  <!-- 獎勳區 -->
-  <div id="reward-section" class="section">
-    <h2>獎勳區</h2>
-    <div id="barcode-list">
-      <!-- 條碼清單會動態生成 -->
-    </div>
-  </div>
-
-  <script src="https://cdn.jsdelivr.net/npm/jsbarcode"></script>
   <script>
-    // 初始化用戶資料庫，從 LocalStorage 讀取
-    const userDatabase = JSON.parse(localStorage.getItem('userDatabase')) || {};
-    const redeemRecords = JSON.parse(localStorage.getItem('redeemRecords')) || {};
+    // 用戶資料
+    let userDatabase = {}; // 代碼 -> {password, points, signedIn}
+    let redeemRecords = {}; // 代碼 -> {item, used, barcodeUrl}
 
-    // 更新本地存儲的數據
-    function saveToLocalStorage() {
-      localStorage.setItem('userDatabase', JSON.stringify(userDatabase));
-      localStorage.setItem('redeemRecords', JSON.stringify(redeemRecords));
-    }
+    // 特殊用戶（無限點數）
+    const specialUsers = {
+      "1234": { password: "001", points: Infinity, signedIn: false } // 1234代碼和密碼001擁有無限點數
+    };
 
     // 註冊功能
-    document.getElementById('register-button').addEventListener('click', () => {
-      const code = document.getElementById('register-code-input').value;
-      const password = document.getElementById('register-password-input').value;
-      const message = document.getElementById('register-message');
+    document.getElementById("register-button").addEventListener("click", () => {
+      const code = document.getElementById("register-code").value;
+      const password = document.getElementById("register-password").value;
+      const message = document.getElementById("register-message");
 
-      if (userDatabase[code]) {
-        message.textContent = "該代碼已被註冊！";
+      if (code && password) {
+        if (userDatabase[code]) {
+          message.textContent = "該代碼已註冊！";
+        } else {
+          userDatabase[code] = { password, points: 0, signedIn: false }; // 初始點數為0
+          message.textContent = "註冊成功！";
+          saveToLocalStorage();
+        }
       } else {
-        userDatabase[code] = { password, points: 0, lastCheckin: null };
-        message.textContent = "註冊成功！";
-        saveToLocalStorage();
+        message.textContent = "請輸入完整資訊！";
       }
-      message.classList.remove('hidden');
+      message.classList.remove("hidden");
     });
 
     // 簽到功能
-    document.getElementById('checkin-button').addEventListener('click', () => {
-      const code = document.getElementById('checkin-code-input').value;
-      const password = document.getElementById('checkin-password-input').value;
-      const message = document.getElementById('checkin-message');
+    document.getElementById("signin-button").addEventListener("click", () => {
+      const code = document.getElementById("signin-code").value;
+      const password = document.getElementById("signin-password").value;
+      const message = document.getElementById("signin-message");
 
-      if (!userDatabase[code]) {
-        message.textContent = "代碼不存在！";
-      } else if (userDatabase[code].password !== password) {
-        message.textContent = "密碼錯誤！";
+      if (!userDatabase[code] && !specialUsers[code]) {
+        message.textContent = "代碼不存在，請先註冊！";
+      } else if ((userDatabase[code] && userDatabase[code].password !== password) || (specialUsers[code] && specialUsers[code].password !== password)) {
+        message.textContent = "密碼錯誤，請重試！";
+      } else if (userDatabase[code]?.signedIn || specialUsers[code]?.signedIn) {
+        message.textContent = "今天已經簽到過了！";
       } else {
-        const today = new Date().toISOString().split('T')[0];
-        if (userDatabase[code].lastCheckin === today) {
-          message.textContent = "您今天已經簽到過了！";
+        if (specialUsers[code]) {
+          // 無限點數的用戶
+          specialUsers[code].signedIn = true;
         } else {
-          userDatabase[code].points += 1;
-          userDatabase[code].lastCheckin = today;
-          message.textContent = "簽到成功！+1 點數";
-          saveToLocalStorage();
+          userDatabase[code].signedIn = true;
+          userDatabase[code].points += 1; // 簽到增加1點
         }
+        message.textContent = "簽到成功！您的點數增加了1點。";
+        saveToLocalStorage();
       }
-      message.classList.remove('hidden');
+      message.classList.remove("hidden");
     });
 
-    // 查詢點數功能
-    document.getElementById('view-points-button').addEventListener('click', () => {
-      const code = document.getElementById('view-code-input').value;
-      const password = document.getElementById('view-password-input').value;
-      const message = document.getElementById('view-points-message');
+    // 查看點數功能
+    document.getElementById("view-button").addEventListener("click", () => {
+      const code = document.getElementById("view-code").value;
+      const password = document.getElementById("view-password").value;
+      const message = document.getElementById("view-message");
 
-      if (!userDatabase[code]) {
-        message.textContent = "代碼不存在！";
-      } else if (userDatabase[code].password !== password) {
-        message.textContent = "密碼錯誤！";
+      if (!userDatabase[code] && !specialUsers[code]) {
+        message.textContent = "代碼不存在，請先註冊！";
+      } else if ((userDatabase[code] && userDatabase[code].password !== password) || (specialUsers[code] && specialUsers[code].password !== password)) {
+        message.textContent = "密碼錯誤，請重試！";
       } else {
-        message.textContent = (code === "1234" && password === "001") 
-          ? "目前點數：無限" 
-          : `目前點數：${userDatabase[code].points}`;
+        let points = userDatabase[code]?.points || specialUsers[code]?.points;
+        message.textContent = `您的點數：${points === Infinity ? "無限" : points}`;
       }
-      message.classList.remove('hidden');
+
+      message.classList.remove("hidden");
     });
 
     // 兌換功能
@@ -198,88 +169,62 @@
       const [cost, itemName] = document.getElementById('item-select').value.split("|");
       const message = document.getElementById('redeem-message');
 
-      if (!userDatabase[code]) {
+      if (!userDatabase[code] && !specialUsers[code]) {
         message.textContent = "代碼不存在，請先註冊！";
-      } else if (userDatabase[code].password !== password) {
+      } else if ((userDatabase[code] && userDatabase[code].password !== password) || (specialUsers[code] && specialUsers[code].password !== password)) {
         message.textContent = "密碼錯誤，請重試！";
-      } else if (code === "1234" && password === "001") {
-        const uniqueId = `${code}-${Date.now()}`;
-        redeemRecords[uniqueId] = { code, itemName, used: false };
-        message.textContent = `兌換成功！${itemName} 條碼已生成！`;
-        generateBarcode(uniqueId);
-        saveToLocalStorage();
-        updateRewardSection();
-      } else if (userDatabase[code].points < cost) {
-        message.textContent = "點數不足，無法兌換該商品。";
       } else {
-        userDatabase[code].points -= cost;
-        const uniqueId = `${code}-${Date.now()}`;
-        redeemRecords[uniqueId] = { code, itemName, used: false };
-        message.textContent = `兌換成功！${itemName} 條碼已生成！`;
-        generateBarcode(uniqueId);
-        saveToLocalStorage();
-        updateRewardSection();
+        let userPoints = userDatabase[code]?.points || specialUsers[code]?.points;
+
+        if (userPoints === Infinity) {
+          // 無限點數的用戶，直接兌換
+          const uniqueId = `${code}-${Date.now()}`;
+          const barcodeUrl = `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(uniqueId)}&size=200x200`;
+          redeemRecords[uniqueId] = { code, itemName, used: false, barcodeUrl };
+          message.textContent = `無限點數用戶兌換成功！${itemName} 條碼已生成！`;
+          generateBarcode(uniqueId);  // 生成條碼
+          saveToLocalStorage();
+        } else if (userPoints >= cost) {
+          // 有足夠點數的用戶
+          userDatabase[code].points -= cost; // 扣除點數
+          const uniqueId = `${code}-${Date.now()}`;
+          const barcodeUrl = `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(uniqueId)}&size=200x200`;
+          redeemRecords[uniqueId] = { code, itemName, used: false, barcodeUrl };
+          message.textContent = `兌換成功！${itemName} 條碼已生成！`;
+          generateBarcode(uniqueId);  // 生成條碼
+          saveToLocalStorage();
+        } else {
+          message.textContent = "點數不足，無法兌換該商品。";
+        }
       }
+
       message.classList.remove('hidden');
     });
 
-    // 生成條碼
+    // 生成條碼並展示
     function generateBarcode(uniqueId) {
-      JsBarcode(document.getElementById('barcode-image'), `https://example.com/redeem/${uniqueId}`, {
-        format: "CODE128",
-        lineColor: "#000",
-        width: 2,
-        height: 50,
-        displayValue: true
-      });
-    }
-
-    // 更新獎勳區顯示條碼
-    function updateRewardSection() {
       const barcodeList = document.getElementById('barcode-list');
-      barcodeList.innerHTML = ""; // 清空舊內容
-      let hasBarcodes = false;
+      const barcodeItem = document.createElement('div');
+      barcodeItem.classList.add('barcode-item');
+      
+      // 條碼圖片
+      const barcodeImage = document.createElement('img');
+      barcodeImage.src = redeemRecords[uniqueId].barcodeUrl;
+      barcodeImage.classList.add('barcode');
 
-      Object.entries(redeemRecords).forEach(([uniqueId, record]) => {
-        if (!record.used) {
-          hasBarcodes = true;
-          const barcodeItem = document.createElement('div');
-          barcodeItem.style.marginBottom = '20px';
+      // 條碼描述文字
+      const barcodeText = document.createElement('p');
+      barcodeText.textContent = `商品: ${redeemRecords[uniqueId].itemName} | 條碼ID: ${uniqueId}`;
 
-          const barcodeImage = document.createElement('img');
-          JsBarcode(barcodeImage, `https://example.com/redeem/${uniqueId}`, {
-            format: "CODE128",
-            lineColor: "#000",
-            width: 2,
-            height: 50,
-            displayValue: true
-          });
+      // 確定使用按鈕
+      const useButton = document.createElement('button');
+      useButton.textContent = "確定使用";
+      useButton.onclick = () => {
+        redeemRecords[uniqueId].used = true;
+        saveToLocalStorage();
+        updateRewardSection();  // 更新兌換區
+      };
 
-          const barcodeText = document.createElement('p');
-          barcodeText.textContent = `商品: ${record.itemName} | 條碼ID: ${uniqueId}`;
-
-          const useButton = document.createElement('button');
-          useButton.textContent = "確定使用";
-          useButton.onclick = () => {
-            record.used = true;
-            saveToLocalStorage();
-            updateRewardSection();
-          };
-
-          barcodeItem.appendChild(barcodeImage);
-          barcodeItem.appendChild(barcodeText);
-          barcodeItem.appendChild(useButton);
-          barcodeList.appendChild(barcodeItem);
-        }
-      });
-
-      if (!hasBarcodes) {
-        barcodeList.innerHTML = "<p>目前沒有可用條碼。</p>";
-      }
-    }
-
-    // 初始化時更新獎勳區
-    updateRewardSection();
-  </script>
-</body>
-</html>
+      // 添加元素到條碼區域
+      barcodeItem.appendChild(barcodeImage);
+      barc
