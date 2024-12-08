@@ -123,6 +123,12 @@
   </div>
 
   <script>
+    // 檢查設備唯一性
+    const deviceId = localStorage.getItem('deviceId');
+    if (!deviceId) {
+      localStorage.setItem('deviceId', Math.random().toString(36).substr(2, 9)); // 設備唯一識別碼
+    }
+
     // 初始化玩家數據
     let playerData = JSON.parse(localStorage.getItem('playerData')) || {
       code: "",
@@ -141,16 +147,25 @@
       document.getElementById('current-points').textContent = playerData.points;
     }
 
-    // 切換頁面
-    const navButtons = document.querySelectorAll('.nav-btn');
-    const sections = document.querySelectorAll('.section');
-    navButtons.forEach(button => {
-      button.addEventListener('click', () => {
-        navButtons.forEach(btn => btn.classList.remove('active'));
-        button.classList.add('active');
-        sections.forEach(section => section.classList.remove('active'));
-        document.getElementById(button.getAttribute('data-target')).classList.add('active');
-      });
+    // 註冊功能
+    document.getElementById('register-btn').addEventListener('click', () => {
+      if (localStorage.getItem('playerData') !== null) {
+        document.getElementById('register-message').textContent = "此設備已註冊過帳號！";
+        return;
+      }
+      
+      const code = document.getElementById('register-code').value;
+      const password = document.getElementById('register-password').value;
+      if (code && password) {
+        playerData.code = code;
+        playerData.password = password;
+        playerData.points = 100; // 註冊送 100 點
+        savePlayerData();
+        updatePointsDisplay();
+        document.getElementById('register-message').textContent = "註冊成功！獲得 100 點！";
+      } else {
+        document.getElementById('register-message').textContent = "請輸入完整的代碼和密碼！";
+      }
     });
 
     // 簽到功能
@@ -173,22 +188,6 @@
       }
     });
 
-    // 註冊功能
-    document.getElementById('register-btn').addEventListener('click', () => {
-      const code = document.getElementById('register-code').value;
-      const password = document.getElementById('register-password').value;
-      if (code && password) {
-        playerData.code = code;
-        playerData.password = password;
-        playerData.points = 100; // 註冊送 100 點
-        savePlayerData();
-        updatePointsDisplay();
-        document.getElementById('register-message').textContent = "註冊成功！獲得 100 點！";
-      } else {
-        document.getElementById('register-message').textContent = "請輸入完整的代碼和密碼！";
-      }
-    });
-
     // 兌換商品功能
     function redeemItem(itemName, pointsCost) {
       const code = document.getElementById('redeem-code').value;
@@ -196,11 +195,11 @@
       if (code === playerData.code && password === playerData.password) {
         if (playerData.points >= pointsCost) {
           playerData.points -= pointsCost;
-          playerData.rewards.push({ item: itemName, used: false });
+          playerData.rewards.push(itemName);
           savePlayerData();
           updatePointsDisplay();
-          updateRewardList();
-          document.getElementById('redeem-message').textContent = `兌換成功！獲得商品：${itemName}`;
+          document.getElementById('redeem-message').textContent = `兌換成功！獲得 ${itemName}`;
+          displayRewards(); // 更新獎勳區
         } else {
           document.getElementById('redeem-message').textContent = "點數不足，無法兌換！";
         }
@@ -209,40 +208,18 @@
       }
     }
 
-    // 獎勳區更新
-    function updateRewardList() {
+    // 顯示獎勳區
+    function displayRewards() {
       const rewardList = document.getElementById('reward-list');
-      rewardList.innerHTML = "";
-
       if (playerData.rewards.length === 0) {
-        rewardList.innerHTML = "<p>尚無兌換記錄。</p>";
+        rewardList.innerHTML = "<p>尚無兌換記錄</p>";
       } else {
-        playerData.rewards.forEach(reward => {
-          const rewardItem = document.createElement('div');
-          rewardItem.textContent = `商品：${reward.item}`;
-          rewardList.appendChild(rewardItem);
-        });
+        rewardList.innerHTML = playerData.rewards.map(reward => `<p>${reward}</p>`).join('');
       }
     }
 
-    // 發票抽獎功能
-    document.getElementById('lottery-btn').addEventListener('click', () => {
-      const today = new Date().toISOString().split('T')[0];
-      if (playerData.lastLotteryDate === today) {
-        document.getElementById('lottery-message').textContent = "今天已經抽過獎了！";
-        return;
-      }
-      const lotteryPrize = Math.floor(Math.random() * 101); // 0-100 點
-      playerData.points += lotteryPrize;
-      playerData.lastLotteryDate = today;
-      savePlayerData();
-      updatePointsDisplay();
-      document.getElementById('lottery-message').textContent = `恭喜！你抽中了 ${lotteryPrize} 點！`;
-    });
-
-    // 初始化顯示
-    updatePointsDisplay();
-    updateRewardList();
+    // 初始化獎勳區
+    displayRewards();
   </script>
 </body>
 </html>
