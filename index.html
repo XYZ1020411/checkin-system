@@ -67,7 +67,8 @@
       <button class="nav-btn" data-target="register-section">註冊</button>
       <button class="nav-btn" data-target="query-section">查看點數</button>
       <button class="nav-btn" data-target="redeem-section">兌換商品</button>
-      <button class="nav-btn" data-target="lottery-section">抽獎</button>
+      <button class="nav-btn" data-target="reward-section">獎勳區</button>
+      <button class="nav-btn" data-target="lottery-section">發票抽獎</button>
     </nav>
 
     <!-- 簽到 -->
@@ -103,22 +104,31 @@
       <p id="redeem-message"></p>
     </div>
 
-    <!-- 抽獎 -->
+    <!-- 獎勳區 -->
+    <div id="reward-section" class="section">
+      <h2>獎勳區</h2>
+      <div id="reward-list">
+        <p>尚無兌換記錄</p>
+      </div>
+    </div>
+
+    <!-- 發票抽獎 -->
     <div id="lottery-section" class="section">
-      <h2>抽獎</h2>
+      <h2>發票抽獎</h2>
       <button id="lottery-btn">抽獎</button>
-      <p id="lottery-result"></p>
+      <p id="lottery-message"></p>
     </div>
   </div>
 
   <script>
     // 初始化玩家數據
     let playerData = JSON.parse(localStorage.getItem('playerData')) || {
-      code: "1234",
-      password: "abcd",
-      points: 100,
+      code: "",
+      password: "",
+      points: 0,
       lastSigninDate: "",
-      lastLotteryDate: ""
+      rewards: [], // 存放兌換的商品記錄
+      lastLotteryDate: "" // 記錄最後一次抽獎日期
     };
 
     function savePlayerData() {
@@ -168,8 +178,10 @@
       if (code && password) {
         playerData.code = code;
         playerData.password = password;
+        playerData.points = 100; // 註冊送 100 點
         savePlayerData();
-        document.getElementById('register-message').textContent = "註冊成功！";
+        updatePointsDisplay();
+        document.getElementById('register-message').textContent = "註冊成功！獲得 100 點！";
       } else {
         document.getElementById('register-message').textContent = "請輸入完整的代碼和密碼！";
       }
@@ -179,31 +191,64 @@
     function redeemItem(itemName, pointsCost) {
       if (playerData.points >= pointsCost) {
         playerData.points -= pointsCost;
+        playerData.rewards.push({ item: itemName, used: false });
         savePlayerData();
         updatePointsDisplay();
+        updateRewardList();
         document.getElementById('redeem-message').textContent = `兌換成功！獲得商品：${itemName}`;
       } else {
         document.getElementById('redeem-message').textContent = "點數不足，無法兌換！";
       }
     }
 
-    // 抽獎功能
+    // 獎勳區更新
+    function updateRewardList() {
+      const rewardList = document.getElementById('reward-list');
+      rewardList.innerHTML = "";
+
+      if (playerData.rewards.length === 0) {
+        rewardList.innerHTML = "<p>尚無兌換記錄</p>";
+        return;
+      }
+
+      playerData.rewards.forEach((reward, index) => {
+        const rewardItem = document.createElement('div');
+        rewardItem.textContent = `${reward.item} - ${reward.used ? "已使用" : "未使用"}`;
+        if (!reward.used) {
+          const useButton = document.createElement('button');
+          useButton.textContent = "標記已使用";
+          useButton.onclick = () => {
+            reward.used = true;
+            savePlayerData();
+            updateRewardList();
+          };
+          rewardItem.appendChild(useButton);
+        }
+        rewardList.appendChild(rewardItem);
+      });
+    }
+
+    // 發票抽獎功能
     document.getElementById('lottery-btn').addEventListener('click', () => {
       const today = new Date().toISOString().split('T')[0];
       if (playerData.lastLotteryDate === today) {
-        document.getElementById('lottery-result').textContent = "今天已抽過獎！";
-      } else {
-        playerData.lastLotteryDate = today;
-        const reward = Math.random() < 0.2 ? 100 : 0;
-        playerData.points += reward;
-        savePlayerData();
-        updatePointsDisplay();
-        document.getElementById('lottery-result').textContent = reward > 0 ? `恭喜中獎！獲得 ${reward} 點！` : "未中獎！";
+        document.getElementById('lottery-message').textContent = "今天已經抽過獎了！";
+        return;
       }
+
+      // 每天一次抽獎
+      playerData.lastLotteryDate = today;
+      const lotteryPrize = Math.floor(Math.random() * 101); // 0 - 100 點
+      playerData.points += lotteryPrize;
+      savePlayerData();
+      updatePointsDisplay();
+
+      document.getElementById('lottery-message').textContent = `恭喜！你抽中了 ${lotteryPrize} 點！`;
     });
 
     // 初始化
     updatePointsDisplay();
+    updateRewardList();
   </script>
 </body>
 </html>
