@@ -123,11 +123,26 @@
   </div>
 
   <script>
-    // 檢查設備唯一性
-    const deviceId = localStorage.getItem('deviceId');
-    if (!deviceId) {
-      localStorage.setItem('deviceId', Math.random().toString(36).substr(2, 9)); // 設備唯一識別碼
-    }
+    // 確保每個按鈕按下時會顯示相應區塊
+    document.querySelectorAll('.nav-btn').forEach(button => {
+      button.addEventListener('click', function() {
+        const targetSection = document.getElementById(this.getAttribute('data-target'));
+        
+        // 隱藏所有區域
+        document.querySelectorAll('.section').forEach(section => {
+          section.classList.remove('active');
+        });
+
+        // 顯示目標區域
+        targetSection.classList.add('active');
+
+        // 讓按鈕顯示為 active，其他的去除
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+          btn.classList.remove('active');
+        });
+        this.classList.add('active');
+      });
+    });
 
     // 初始化玩家數據
     let playerData = JSON.parse(localStorage.getItem('playerData')) || {
@@ -195,11 +210,10 @@
       if (code === playerData.code && password === playerData.password) {
         if (playerData.points >= pointsCost) {
           playerData.points -= pointsCost;
-          playerData.rewards.push(itemName);
+          playerData.rewards.push(`兌換商品：${itemName}`);
           savePlayerData();
           updatePointsDisplay();
-          document.getElementById('redeem-message').textContent = `兌換成功！獲得 ${itemName}`;
-          displayRewards(); // 更新獎勳區
+          displayRewards();
         } else {
           document.getElementById('redeem-message').textContent = "點數不足，無法兌換！";
         }
@@ -218,8 +232,29 @@
       }
     }
 
-    // 初始化獎勳區
-    displayRewards();
+    // 抽獎功能
+    document.getElementById('lottery-btn').addEventListener('click', () => {
+      const today = new Date().toISOString().split('T')[0];
+      if (playerData.lastLotteryDate === today) {
+        document.getElementById('lottery-message').textContent = "今天已經抽過獎了！";
+        return;
+      }
+      
+      const lotteryPrize = Math.random() * 100;
+      if (lotteryPrize < 20) {
+        playerData.points += 100; // 最高 100 點
+        document.getElementById('lottery-message').textContent = "恭喜！您中了 100 點！";
+      } else {
+        document.getElementById('lottery-message').textContent = "未中獎，請再接再厲！";
+      }
+
+      playerData.lastLotteryDate = today;
+      savePlayerData();
+      updatePointsDisplay();
+    });
+
+    // 初始化頁面
+    updatePointsDisplay();
   </script>
 </body>
 </html>
