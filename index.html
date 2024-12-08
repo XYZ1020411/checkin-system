@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>玩家系統</title>
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.0/dist/JsBarcode.all.min.js"></script>
-  <script type="text/javascript" src="https://cdn.emailjs.com/dist/email.min.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -49,9 +48,6 @@
   </div>
 
   <script>
-    // 初始化EmailJS
-    emailjs.init("YOUR_USER_ID");  // 用你的 EmailJS User ID 替換
-
     // 初始化玩家資料
     let playerData = JSON.parse(localStorage.getItem('playerData')) || {
       playerCode: "1234",
@@ -98,7 +94,6 @@
             record.used = true;
             playerData.points += 10;  // 假設確認使用後獲得額外點數
             savePlayerData();  // 保存玩家數據
-            sendEmailNotification(record.itemName, uniqueId);  // 发送邮件
             updateRewardSection();  // 更新界面
           };
 
@@ -113,21 +108,6 @@
       if (!hasBarcodes) {
         barcodeList.innerHTML = "<p>目前沒有可用條碼。</p>";
       }
-    }
-
-    // 向指定邮箱发送邮件
-    function sendEmailNotification(itemName, uniqueId) {
-      const templateParams = {
-        playerCode: playerData.playerCode,
-        redeemItem: itemName,
-      };
-
-      emailjs.send("YOUR_SERVICE_ID", "YOUR_TEMPLATE_ID", templateParams)  // 用你的 Service ID 和 Template ID 替换
-        .then(function(response) {
-          console.log('SUCCESS!', response);
-        }, function(error) {
-          console.log('FAILED...', error);
-        });
     }
 
     // 簽到邏輯
