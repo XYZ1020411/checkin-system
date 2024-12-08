@@ -112,6 +112,7 @@
   </div>
 
   <script>
+    // 初始化玩家數據
     let playerData = JSON.parse(localStorage.getItem('playerData')) || {
       code: "1234",
       password: "abcd",
@@ -174,6 +175,18 @@
       }
     });
 
+    // 兌換商品功能
+    function redeemItem(itemName, pointsCost) {
+      if (playerData.points >= pointsCost) {
+        playerData.points -= pointsCost;
+        savePlayerData();
+        updatePointsDisplay();
+        document.getElementById('redeem-message').textContent = `兌換成功！獲得商品：${itemName}`;
+      } else {
+        document.getElementById('redeem-message').textContent = "點數不足，無法兌換！";
+      }
+    }
+
     // 抽獎功能
     document.getElementById('lottery-btn').addEventListener('click', () => {
       const today = new Date().toISOString().split('T')[0];
@@ -189,7 +202,7 @@
       }
     });
 
-    // 初始化點數
+    // 初始化
     updatePointsDisplay();
   </script>
 </body>
