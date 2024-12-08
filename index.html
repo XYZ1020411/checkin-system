@@ -61,19 +61,16 @@
 </head>
 <body>
   <div class="container">
-    <h1>簽到系統</h1>
-
-    <!-- 功能分類頁面 -->
+    <h1>玩家系統</h1>
     <nav>
       <button class="nav-btn active" data-target="signin-section">簽到</button>
       <button class="nav-btn" data-target="register-section">註冊</button>
       <button class="nav-btn" data-target="query-section">查看點數</button>
       <button class="nav-btn" data-target="redeem-section">兌換商品</button>
-      <button class="nav-btn" data-target="reward-section">獎勳區</button>
-      <button class="nav-btn" data-target="lottery-section">發票抽獎</button>
+      <button class="nav-btn" data-target="lottery-section">抽獎</button>
     </nav>
 
-    <!-- 簽到區 -->
+    <!-- 簽到 -->
     <div id="signin-section" class="section active">
       <h2>每日簽到</h2>
       <input type="text" id="signin-code" placeholder="請輸入代碼">
@@ -82,7 +79,7 @@
       <p id="signin-message"></p>
     </div>
 
-    <!-- 註冊區 -->
+    <!-- 註冊 -->
     <div id="register-section" class="section">
       <h2>註冊新玩家</h2>
       <input type="text" id="register-code" placeholder="請輸入代碼">
@@ -91,132 +88,109 @@
       <p id="register-message"></p>
     </div>
 
-    <!-- 查看點數區 -->
+    <!-- 查看 -->
     <div id="query-section" class="section">
       <h2>查看點數</h2>
-      <input type="text" id="query-code" placeholder="請輸入代碼">
-      <input type="password" id="query-password" placeholder="請輸入密碼">
-      <button id="query-btn">查看點數</button>
       <p>當前點數：<span id="current-points">0</span></p>
     </div>
 
-    <!-- 兌換區域 -->
+    <!-- 兌換 -->
     <div id="redeem-section" class="section">
       <h2>兌換商品</h2>
-      <input type="text" id="redeem-code" placeholder="請輸入代碼">
-      <input type="password" id="redeem-password" placeholder="請輸入密碼">
       <button onclick="redeemItem('PUBG 陪玩票', 10)">PUBG 陪玩票 (10 點)</button>
       <button onclick="redeemItem('Minecraft 陪玩票', 20)">Minecraft 陪玩票 (20 點)</button>
       <button onclick="redeemItem('佳音購物票', 50)">佳音購物票 (50 點)</button>
+      <p id="redeem-message"></p>
     </div>
 
-    <!-- 獎勳區 -->
-    <div id="reward-section" class="section">
-      <h2>獎勳區</h2>
-      <div id="reward-list"></div>
-    </div>
-
-    <!-- 發票抽獎區 -->
+    <!-- 抽獎 -->
     <div id="lottery-section" class="section">
-      <h2>發票抽獎</h2>
-      <button onclick="drawLottery()">抽獎</button>
+      <h2>抽獎</h2>
+      <button id="lottery-btn">抽獎</button>
       <p id="lottery-result"></p>
     </div>
   </div>
 
   <script>
-    // 切換區域功能
-    const navButtons = document.querySelectorAll('.nav-btn');
-    const sections = document.querySelectorAll('.section');
-
-    navButtons.forEach(button => {
-      button.addEventListener('click', () => {
-        // 清除所有按鈕的 active 樣式
-        navButtons.forEach(btn => btn.classList.remove('active'));
-        // 為當前按鈕添加 active 樣式
-        button.classList.add('active');
-
-        // 隱藏所有區域
-        sections.forEach(section => section.classList.remove('active'));
-
-        // 顯示目標區域
-        const targetId = button.getAttribute('data-target');
-        document.getElementById(targetId).classList.add('active');
-      });
-    });
-
-    // 初始化玩家資料
     let playerData = JSON.parse(localStorage.getItem('playerData')) || {
-      points: 0,
-      rewards: {},
+      code: "1234",
+      password: "abcd",
+      points: 100,
       lastSigninDate: "",
-      lastLotteryDate: "",
-      registerCode: "12345",
-      registerPassword: "password123",
+      lastLotteryDate: ""
     };
 
     function savePlayerData() {
       localStorage.setItem('playerData', JSON.stringify(playerData));
     }
 
-    // 簽到邏輯
-    document.getElementById("signin-btn").addEventListener("click", () => {
-      const code = document.getElementById("signin-code").value.trim();
-      const password = document.getElementById("signin-password").value.trim();
-      if (code !== playerData.registerCode || password !== playerData.registerPassword) {
-        document.getElementById("signin-message").textContent = "代碼或密碼錯誤！";
-        return;
-      }
-      const today = new Date().toISOString().split("T")[0];
-      if (playerData.lastSigninDate === today) {
-        document.getElementById("signin-message").textContent = "今天已簽到！";
+    function updatePointsDisplay() {
+      document.getElementById('current-points').textContent = playerData.points;
+    }
+
+    // 切換頁面
+    const navButtons = document.querySelectorAll('.nav-btn');
+    const sections = document.querySelectorAll('.section');
+    navButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        navButtons.forEach(btn => btn.classList.remove('active'));
+        button.classList.add('active');
+        sections.forEach(section => section.classList.remove('active'));
+        document.getElementById(button.getAttribute('data-target')).classList.add('active');
+      });
+    });
+
+    // 簽到功能
+    document.getElementById('signin-btn').addEventListener('click', () => {
+      const code = document.getElementById('signin-code').value;
+      const password = document.getElementById('signin-password').value;
+      const today = new Date().toISOString().split('T')[0];
+      if (code === playerData.code && password === playerData.password) {
+        if (playerData.lastSigninDate === today) {
+          document.getElementById('signin-message').textContent = "今天已簽到過！";
+        } else {
+          playerData.lastSigninDate = today;
+          playerData.points += 10;
+          savePlayerData();
+          updatePointsDisplay();
+          document.getElementById('signin-message').textContent = "簽到成功！獲得 10 點！";
+        }
       } else {
-        playerData.lastSigninDate = today;
-        playerData.points += 10;
-        savePlayerData();
-        document.getElementById("signin-message").textContent = "簽到成功！獲得 10 點！";
-        updatePointsDisplay();
+        document.getElementById('signin-message').textContent = "代碼或密碼錯誤！";
       }
     });
 
-    // 更新點數顯示
-    function updatePointsDisplay() {
-      document.getElementById("current-points").textContent = playerData.points;
-    }
-
-    // 初始化顯示點數
-    updatePointsDisplay();
-
-    // 兌換商品邏輯
-    function redeemItem(itemName, pointsCost) {
-      if (playerData.points >= pointsCost) {
-        const uniqueId = `barcode-${Math.random().toString(36).substr(2, 9)}`;
-        playerData.rewards[uniqueId] = {
-          itemName: itemName,
-          used: false
-        };
-        playerData.points -= pointsCost;
+    // 註冊功能
+    document.getElementById('register-btn').addEventListener('click', () => {
+      const code = document.getElementById('register-code').value;
+      const password = document.getElementById('register-password').value;
+      if (code && password) {
+        playerData.code = code;
+        playerData.password = password;
         savePlayerData();
-        alert(`成功兌換 ${itemName}！`);
+        document.getElementById('register-message').textContent = "註冊成功！";
       } else {
-        alert("點數不足，無法兌換！");
+        document.getElementById('register-message').textContent = "請輸入完整的代碼和密碼！";
       }
-    }
+    });
 
-    // 發票抽獎邏輯
-    function drawLottery() {
+    // 抽獎功能
+    document.getElementById('lottery-btn').addEventListener('click', () => {
       const today = new Date().toISOString().split('T')[0];
       if (playerData.lastLotteryDate === today) {
-        document.getElementById("lottery-result").textContent = "今天已經抽過獎了！";
-        return;
+        document.getElementById('lottery-result').textContent = "今天已抽過獎！";
+      } else {
+        playerData.lastLotteryDate = today;
+        const reward = Math.random() < 0.2 ? 100 : 0;
+        playerData.points += reward;
+        savePlayerData();
+        updatePointsDisplay();
+        document.getElementById('lottery-result').textContent = reward > 0 ? `恭喜中獎！獲得 ${reward} 點！` : "未中獎！";
       }
-      const lotteryResult = Math.random() < 0.2 ? 100 : 0; // 20% 機會中獎 100 點
-      playerData.points += lotteryResult;
-      playerData.lastLotteryDate = today;
-      savePlayerData();
-      document.getElementById("lottery-result").textContent = lotteryResult ? `恭喜中獎！您獲得了 ${lotteryResult} 點！` : "很遺憾，今天未中獎。";
-      updatePointsDisplay();
-    }
+    });
+
+    // 初始化點數
+    updatePointsDisplay();
   </script>
 </body>
 </html>
