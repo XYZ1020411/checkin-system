@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>玩家系統</title>
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.0/dist/JsBarcode.all.min.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -80,6 +81,14 @@
     .section.active {
       display: block;
     }
+
+    #barcode-list {
+      margin-top: 20px;
+    }
+
+    #barcode-list img {
+      margin: 10px 0;
+    }
   </style>
 </head>
 <body>
@@ -123,12 +132,18 @@
       <input type="text" id="redeem-code" placeholder="輸入代碼">
       <input type="password" id="redeem-password" placeholder="輸入密碼">
       <select id="redeem-item">
-        <option value="10">PUPG 陪玩票 - 10點</option>
+        <option value="10">PUPG 陪玩票 - 1點</option>
         <option value="20">Minecraft 陪玩票 - 20點</option>
         <option value="30">佳音購物票 - 30點</option>
       </select>
       <button onclick="handleRedeem()">兌換</button>
       <p id="redeem-result"></p>
+    </div>
+
+    <!-- 獎勳區 -->
+    <div id="reward-section" class="section">
+      <h2>未使用的條碼</h2>
+      <div id="barcode-list"></div>
     </div>
   </div>
 
@@ -136,6 +151,8 @@
     const users = {
       "1234": { password: "001", points: Infinity }
     };
+
+    const redeemRecords = {};
 
     document.querySelectorAll('.nav-btn').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -152,7 +169,9 @@
       const password = document.getElementById('signin-password').value;
 
       if (users[code] && users[code].password === password) {
-        alert("簽到成功！");
+        // 簽到成功，增加點數
+        users[code].points += 10;
+        alert("簽到成功！你獲得了10點！");
       } else {
         alert("代碼或密碼錯誤！");
       }
@@ -163,8 +182,8 @@
       const password = document.getElementById('register-password').value;
 
       if (!users[code]) {
-        users[code] = { password, points: 0 };
-        alert("註冊成功！");
+        users[code] = { password, points: 100 }; // 註冊時給予100點
+        alert("註冊成功！你擁有100點！");
       } else {
         alert("代碼已存在！");
       }
@@ -190,6 +209,16 @@
         if (users[code].points >= itemCost) {
           users[code].points -= itemCost;
           alert(`兌換成功！已扣除 ${itemCost} 點。`);
+
+          // 生成條碼
+          const uniqueId = `barcode-${Math.random().toString(36).substr(2, 9)}`;
+          redeemRecords[uniqueId] = {
+            itemName: document.getElementById('redeem-item').options[document.getElementById('redeem-item').selectedIndex].text,
+            used: false
+          };
+
+          // 更新獎勳區
+          updateRewardSection();
         } else {
           alert("點數不足！");
         }
@@ -197,6 +226,55 @@
         alert("代碼或密碼錯誤！");
       }
     }
+
+    function updateRewardSection() {
+      const barcodeList = document.getElementById('barcode-list');
+      barcodeList.innerHTML = ""; // 清空舊內容
+      let hasBarcodes = false;
+
+      Object.entries(redeemRecords).forEach(([uniqueId, record]) => {
+        if (!record.used) {
+          hasBarcodes = true;
+          const barcodeItem = document.createElement('div');
+          barcodeItem.style.marginBottom = '20px';
+
+          // 條碼圖片
+          const barcodeImage = document.createElement('img');
+          JsBarcode(barcodeImage, `https://example.com/redeem/${uniqueId}`, {
+            format: "CODE128",
+            lineColor: "#000",
+            width: 2,
+            height: 50,
+            displayValue: true
+          });
+
+          // 條碼描述文字
+          const barcodeText = document.createElement('p');
+          barcodeText.textContent = `商品: ${record.itemName} | 條碼ID: ${uniqueId}`;
+
+          // 確定使用按鈕
+          const useButton = document.createElement('button');
+          useButton.textContent = "確定使用";
+          useButton.onclick = () => {
+            record.used = true;
+            updateRewardSection();
+          };
+
+          // 添加到列表
+          barcodeItem.appendChild(barcodeImage);
+          barcodeItem.appendChild(barcodeText);
+          barcodeItem.appendChild(useButton);
+          barcodeList.appendChild(barcodeItem);
+        }
+      });
+
+      if (!hasBarcodes) {
+        barcodeList.innerHTML = "<p>目前沒有可用條碼。</p>";
+      }
+    }
+
+    // 初始化時更新獎勳區
+    updateRewardSection();
   </script>
 </body>
 </html>
