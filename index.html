@@ -61,7 +61,7 @@
 </head>
 <body>
   <div class="container">
-    <h1>玩家系統</h1>
+    <h1>簽到系統</h1>
 
     <!-- 功能分類頁面 -->
     <nav>
@@ -110,9 +110,9 @@
       <button onclick="redeemItem('佳音購物票', 50)">佳音購物票 (50 點)</button>
     </div>
 
-    <!-- 獎勳區 -->
+    <!-- 獎勵區 -->
     <div id="reward-section" class="section">
-      <h2>獎勳區</h2>
+      <h2>獎勵區</h2>
       <div id="reward-list"></div>
     </div>
 
@@ -125,22 +125,23 @@
   </div>
 
   <script>
-    // 切換區域
-    document.querySelectorAll('.nav-btn').forEach(button => {
+    // 切換區域功能
+    const navButtons = document.querySelectorAll('.nav-btn');
+    const sections = document.querySelectorAll('.section');
+
+    navButtons.forEach(button => {
       button.addEventListener('click', () => {
-        // 移除其他按鈕的 active 樣式
-        document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
-        // 加入當前按鈕的 active 樣式
+        // 清除所有按鈕的 active 樣式
+        navButtons.forEach(btn => btn.classList.remove('active'));
+        // 為當前按鈕添加 active 樣式
         button.classList.add('active');
 
-        // 切換區域顯示
-        const target = button.getAttribute('data-target');
-        document.querySelectorAll('.section').forEach(section => {
-          section.classList.remove('active');
-          if (section.id === target) {
-            section.classList.add('active');
-          }
-        });
+        // 隱藏所有區域
+        sections.forEach(section => section.classList.remove('active'));
+
+        // 顯示目標區域
+        const targetId = button.getAttribute('data-target');
+        document.getElementById(targetId).classList.add('active');
       });
     });
 
@@ -156,11 +157,6 @@
 
     function savePlayerData() {
       localStorage.setItem('playerData', JSON.stringify(playerData));
-    }
-
-    // 更新點數顯示
-    function updatePointsDisplay() {
-      document.getElementById("current-points").textContent = playerData.points;
     }
 
     // 簽到邏輯
@@ -182,6 +178,11 @@
         updatePointsDisplay();
       }
     });
+
+    // 更新點數顯示
+    function updatePointsDisplay() {
+      document.getElementById("current-points").textContent = playerData.points;
+    }
 
     // 初始化顯示點數
     updatePointsDisplay();
