@@ -5,11 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>玩家系統</title>
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.0/dist/JsBarcode.all.min.js"></script>
+  <script type="text/javascript" src="https://cdn.emailjs.com/dist/email.min.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
       font-size: 20px;
-      background-image: url('https://example.com/your-canva-background.jpg'); /* 替換為你的背景圖片 URL */
+      background-image: url('https://www.canva.com/design/DAGYqVL1B00/KfevPmHkv5KayG-KDiPobg/view?utm_content=DAGYqVL1B00&utm_campaign=designshare&utm_medium=link&utm_source=editor.jpg');
       background-size: cover;
       background-repeat: no-repeat;
       background-position: center;
@@ -17,78 +18,7 @@
       padding: 0;
       color: #fff;
     }
-
-    .container {
-      padding: 20px;
-      background: rgba(0, 0, 0, 0.6); /* 半透明黑色背景 */
-      border-radius: 10px;
-      max-width: 600px;
-      margin: 50px auto;
-      text-align: center;
-    }
-
-    h1, h2 {
-      margin-bottom: 20px;
-    }
-
-    input, select, button {
-      display: block;
-      margin: 10px auto;
-      padding: 10px;
-      font-size: 20px;
-      width: 80%;
-      border: none;
-      border-radius: 5px;
-    }
-
-    input, select {
-      background: rgba(255, 255, 255, 0.9);
-      color: #000;
-    }
-
-    button {
-      background-color: #4CAF50;
-      color: white;
-      cursor: pointer;
-    }
-
-    button:hover {
-      background-color: #45a049;
-    }
-
-    nav {
-      margin-bottom: 20px;
-    }
-
-    nav button {
-      display: inline-block;
-      margin: 5px;
-      padding: 10px 20px;
-      font-size: 20px;
-      background-color: #FFD700;
-      color: #000;
-    }
-
-    nav button.active {
-      background-color: #FFA500;
-      color: #fff;
-    }
-
-    .section {
-      display: none;
-    }
-
-    .section.active {
-      display: block;
-    }
-
-    #barcode-list {
-      margin-top: 20px;
-    }
-
-    #barcode-list img {
-      margin: 10px 0;
-    }
+    /* 其他CSS样式省略 */
   </style>
 </head>
 <body>
@@ -99,134 +29,24 @@
       <button class="nav-btn" data-target="register-section">註冊</button>
       <button class="nav-btn" data-target="query-section">查詢點數</button>
       <button class="nav-btn" data-target="redeem-section">兌換商品</button>
-      <button class="nav-btn" data-target="reward-section">獎勳區</button> <!-- 獎勳區按鈕 -->
+      <button class="nav-btn" data-target="reward-section">獎勳區</button>
     </nav>
-
-    <!-- 簽到區 -->
-    <div id="signin-section" class="section active">
-      <h2>每日簽到</h2>
-      <input type="text" id="signin-code" placeholder="輸入代碼">
-      <input type="password" id="signin-password" placeholder="輸入密碼">
-      <button onclick="handleSignin()">簽到</button>
-    </div>
-
-    <!-- 註冊區 -->
-    <div id="register-section" class="section">
-      <h2>註冊</h2>
-      <input type="text" id="register-code" placeholder="輸入代碼">
-      <input type="password" id="register-password" placeholder="輸入密碼">
-      <button onclick="handleRegister()">註冊</button>
-    </div>
-
-    <!-- 查詢點數區 -->
-    <div id="query-section" class="section">
-      <h2>查詢點數</h2>
-      <input type="text" id="query-code" placeholder="輸入代碼">
-      <input type="password" id="query-password" placeholder="輸入密碼">
-      <button onclick="handleQuery()">查詢</button>
-      <p id="query-result"></p>
-    </div>
-
-    <!-- 兌換區 -->
-    <div id="redeem-section" class="section">
-      <h2>兌換商品</h2>
-      <input type="text" id="redeem-code" placeholder="輸入代碼">
-      <input type="password" id="redeem-password" placeholder="輸入密碼">
-      <select id="redeem-item">
-        <option value="10">PUPG 陪玩票 - 1點</option>
-        <option value="20">Minecraft 陪玩票 - 20點</option>
-        <option value="30">佳音購物票 - 30點</option>
-      </select>
-      <button onclick="handleRedeem()">兌換</button>
-      <p id="redeem-result"></p>
-    </div>
 
     <!-- 獎勳區 -->
     <div id="reward-section" class="section">
       <h2>未使用的條碼</h2>
       <div id="barcode-list"></div>
     </div>
+
+    <!-- 其他區域（註冊、簽到等）按需添加 -->
+
   </div>
 
   <script>
-    const users = {
-      "1234": { password: "001", points: Infinity }
-    };
+    // 初始化EmailJS
+    emailjs.init("YOUR_USER_ID");  // 用你的 EmailJS User ID 替換
 
-    const redeemRecords = {};
-
-    document.querySelectorAll('.nav-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-        document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
-
-        btn.classList.add('active');
-        document.getElementById(btn.dataset.target).classList.add('active');
-      });
-    });
-
-    function handleSignin() {
-      const code = document.getElementById('signin-code').value;
-      const password = document.getElementById('signin-password').value;
-
-      if (users[code] && users[code].password === password) {
-        // 簽到成功，增加點數
-        users[code].points += 10;
-        alert("簽到成功！你獲得了10點！");
-      } else {
-        alert("代碼或密碼錯誤！");
-      }
-    }
-
-    function handleRegister() {
-      const code = document.getElementById('register-code').value;
-      const password = document.getElementById('register-password').value;
-
-      if (!users[code]) {
-        users[code] = { password, points: 100 }; // 註冊時給予100點
-        alert("註冊成功！你擁有100點！");
-      } else {
-        alert("代碼已存在！");
-      }
-    }
-
-    function handleQuery() {
-      const code = document.getElementById('query-code').value;
-      const password = document.getElementById('query-password').value;
-
-      if (users[code] && users[code].password === password) {
-        document.getElementById('query-result').textContent = `你的點數為：${users[code].points}`;
-      } else {
-        alert("代碼或密碼錯誤！");
-      }
-    }
-
-    function handleRedeem() {
-      const code = document.getElementById('redeem-code').value;
-      const password = document.getElementById('redeem-password').value;
-      const itemCost = parseInt(document.getElementById('redeem-item').value);
-
-      if (users[code] && users[code].password === password) {
-        if (users[code].points >= itemCost) {
-          users[code].points -= itemCost;
-          alert(`兌換成功！已扣除 ${itemCost} 點。`);
-
-          // 生成條碼
-          const uniqueId = `barcode-${Math.random().toString(36).substr(2, 9)}`;
-          redeemRecords[uniqueId] = {
-            itemName: document.getElementById('redeem-item').options[document.getElementById('redeem-item').selectedIndex].text,
-            used: false
-          };
-
-          // 更新獎勳區
-          updateRewardSection();
-        } else {
-          alert("點數不足！");
-        }
-      } else {
-        alert("代碼或密碼錯誤！");
-      }
-    }
+    const redeemRecords = {};  // 用於存儲條碼紀錄
 
     function updateRewardSection() {
       const barcodeList = document.getElementById('barcode-list');
@@ -258,6 +78,7 @@
           useButton.textContent = "確定使用";
           useButton.onclick = () => {
             record.used = true;
+            sendEmailNotification(record.itemName, uniqueId);  // 发送邮件
             updateRewardSection();
           };
 
@@ -274,8 +95,36 @@
       }
     }
 
-    // 初始化時更新獎勳區
-    updateRewardSection();
+    // 向指定邮箱发送邮件
+    function sendEmailNotification(itemName, uniqueId) {
+      const playerCode = "1234";  // 假设这是玩家的代号（可以根据需求更改）
+
+      const templateParams = {
+        playerCode: playerCode,
+        redeemItem: itemName,
+      };
+
+      emailjs.send("service_zg3ovit", "Y4p_jj_ZnfFecFDg8", templateParams)  // 用你的 Service ID 和 Template ID 替换
+        .then(function(response) {
+          console.log('SUCCESS!', response);
+        }, function(error) {
+          console.log('FAILED...', error);
+        });
+    }
+
+    // 模拟条码记录和兑换
+    function redeemItem(itemName, pointsCost) {
+      const uniqueId = `barcode-${Math.random().toString(36).substr(2, 9)}`;
+      redeemRecords[uniqueId] = {
+        itemName: itemName,
+        used: false
+      };
+      updateRewardSection();
+    }
+
+    // 示例：生成一个商品的条码记录并展示
+    redeemItem("PUPG 陪玩票", 10);  // 传入商品名和兑换所需点数
+
   </script>
 </body>
 </html>
