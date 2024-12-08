@@ -110,9 +110,9 @@
       <button onclick="redeemItem('佳音購物票', 50)">佳音購物票 (50 點)</button>
     </div>
 
-    <!-- 獎勵區 -->
+    <!-- 獎勳區 -->
     <div id="reward-section" class="section">
-      <h2>獎勵區</h2>
+      <h2>獎勳區</h2>
       <div id="reward-list"></div>
     </div>
 
@@ -186,6 +186,37 @@
 
     // 初始化顯示點數
     updatePointsDisplay();
+
+    // 兌換商品邏輯
+    function redeemItem(itemName, pointsCost) {
+      if (playerData.points >= pointsCost) {
+        const uniqueId = `barcode-${Math.random().toString(36).substr(2, 9)}`;
+        playerData.rewards[uniqueId] = {
+          itemName: itemName,
+          used: false
+        };
+        playerData.points -= pointsCost;
+        savePlayerData();
+        alert(`成功兌換 ${itemName}！`);
+      } else {
+        alert("點數不足，無法兌換！");
+      }
+    }
+
+    // 發票抽獎邏輯
+    function drawLottery() {
+      const today = new Date().toISOString().split('T')[0];
+      if (playerData.lastLotteryDate === today) {
+        document.getElementById("lottery-result").textContent = "今天已經抽過獎了！";
+        return;
+      }
+      const lotteryResult = Math.random() < 0.2 ? 100 : 0; // 20% 機會中獎 100 點
+      playerData.points += lotteryResult;
+      playerData.lastLotteryDate = today;
+      savePlayerData();
+      document.getElementById("lottery-result").textContent = lotteryResult ? `恭喜中獎！您獲得了 ${lotteryResult} 點！` : "很遺憾，今天未中獎。";
+      updatePointsDisplay();
+    }
   </script>
 </body>
 </html>
