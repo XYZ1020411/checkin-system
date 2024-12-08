@@ -98,6 +98,8 @@
     <!-- 兌換 -->
     <div id="redeem-section" class="section">
       <h2>兌換商品</h2>
+      <input type="text" id="redeem-code" placeholder="請輸入代碼">
+      <input type="password" id="redeem-password" placeholder="請輸入密碼">
       <button onclick="redeemItem('PUBG 陪玩票', 10)">PUBG 陪玩票 (10 點)</button>
       <button onclick="redeemItem('Minecraft 陪玩票', 20)">Minecraft 陪玩票 (20 點)</button>
       <button onclick="redeemItem('佳音購物票', 50)">佳音購物票 (50 點)</button>
@@ -189,15 +191,21 @@
 
     // 兌換商品功能
     function redeemItem(itemName, pointsCost) {
-      if (playerData.points >= pointsCost) {
-        playerData.points -= pointsCost;
-        playerData.rewards.push({ item: itemName, used: false });
-        savePlayerData();
-        updatePointsDisplay();
-        updateRewardList();
-        document.getElementById('redeem-message').textContent = `兌換成功！獲得商品：${itemName}`;
+      const code = document.getElementById('redeem-code').value;
+      const password = document.getElementById('redeem-password').value;
+      if (code === playerData.code && password === playerData.password) {
+        if (playerData.points >= pointsCost) {
+          playerData.points -= pointsCost;
+          playerData.rewards.push({ item: itemName, used: false });
+          savePlayerData();
+          updatePointsDisplay();
+          updateRewardList();
+          document.getElementById('redeem-message').textContent = `兌換成功！獲得商品：${itemName}`;
+        } else {
+          document.getElementById('redeem-message').textContent = "點數不足，無法兌換！";
+        }
       } else {
-        document.getElementById('redeem-message').textContent = "點數不足，無法兌換！";
+        document.getElementById('redeem-message').textContent = "代碼或密碼錯誤！";
       }
     }
 
@@ -207,25 +215,14 @@
       rewardList.innerHTML = "";
 
       if (playerData.rewards.length === 0) {
-        rewardList.innerHTML = "<p>尚無兌換記錄</p>";
-        return;
+        rewardList.innerHTML = "<p>尚無兌換記錄。</p>";
+      } else {
+        playerData.rewards.forEach(reward => {
+          const rewardItem = document.createElement('div');
+          rewardItem.textContent = `商品：${reward.item}`;
+          rewardList.appendChild(rewardItem);
+        });
       }
-
-      playerData.rewards.forEach((reward, index) => {
-        const rewardItem = document.createElement('div');
-        rewardItem.textContent = `${reward.item} - ${reward.used ? "已使用" : "未使用"}`;
-        if (!reward.used) {
-          const useButton = document.createElement('button');
-          useButton.textContent = "標記已使用";
-          useButton.onclick = () => {
-            reward.used = true;
-            savePlayerData();
-            updateRewardList();
-          };
-          rewardItem.appendChild(useButton);
-        }
-        rewardList.appendChild(rewardItem);
-      });
     }
 
     // 發票抽獎功能
@@ -235,18 +232,15 @@
         document.getElementById('lottery-message').textContent = "今天已經抽過獎了！";
         return;
       }
-
-      // 每天一次抽獎
-      playerData.lastLotteryDate = today;
-      const lotteryPrize = Math.floor(Math.random() * 101); // 0 - 100 點
+      const lotteryPrize = Math.floor(Math.random() * 101); // 0-100 點
       playerData.points += lotteryPrize;
+      playerData.lastLotteryDate = today;
       savePlayerData();
       updatePointsDisplay();
-
       document.getElementById('lottery-message').textContent = `恭喜！你抽中了 ${lotteryPrize} 點！`;
     });
 
-    // 初始化
+    // 初始化顯示
     updatePointsDisplay();
     updateRewardList();
   </script>
