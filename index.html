@@ -213,15 +213,19 @@
     document.getElementById('redeem-minecraft').addEventListener('click', () => redeemItem("Minecraft 陪玩票", 20));
     document.getElementById('redeem-佳音購物票').addEventListener('click', () => redeemItem("佳音購物票", 50));
 
-    // 兌換邏輯
     function redeemItem(itemName, pointsCost) {
+      if (!playerData.loggedIn) {
+        alert("請先登入！");
+        return;
+      }
+
       if (playerData.points >= pointsCost) {
         playerData.points -= pointsCost;
         savePlayerData();
-        document.getElementById('redeem-section').textContent = `${itemName} 兌換成功！`;
+        alert(`${itemName} 兌換成功！`);
         updateUI();
       } else {
-        document.getElementById('redeem-section').textContent = "點數不足，無法兌換！";
+        alert("點數不足，無法兌換！");
       }
     }
 
@@ -250,8 +254,15 @@
       updateUI();
     });
 
+    // 登出邏輯
+    document.getElementById('logout-btn').addEventListener('click', () => {
+      playerData.loggedIn = false;
+      savePlayerData();
+      showSection('login-section');
+      updateUI();
+    });
+
     // 初始時顯示登入頁面
-    showSection('login-section');
     updateUI();
   </script>
 </body>
