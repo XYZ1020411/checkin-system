@@ -122,8 +122,8 @@
   <script>
     // 初始化玩家資料
     let playerData = JSON.parse(localStorage.getItem('playerData')) || {
-      playerCode: "1234",
-      points: 100,
+      playerCode: null, // 初始值為null，表示尚未註冊
+      points: 0,
       redeemRecords: {},
       lastSigninDate: "", // 上次簽到的日期
       loggedIn: false // 登入狀態
@@ -147,6 +147,11 @@
       const sections = document.querySelectorAll('.section');
       sections.forEach(section => section.classList.remove('active'));
       document.getElementById(target).classList.add('active');
+    }
+
+    // 如果沒有玩家資料，顯示註冊頁面
+    if (!playerData.playerCode) {
+      showSection('register-section');
     }
 
     // 登入邏輯
