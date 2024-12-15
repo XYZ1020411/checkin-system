@@ -112,7 +112,7 @@
     let playerData = JSON.parse(localStorage.getItem('playerData')) || {};
     let currentPlayer = null; // 紀錄當前登錄的玩家
 
-    const scriptUrl = "https://script.google.com/macros/s/<AKfycbwh7M3Eqm8mC5Xo_dNkPmRuxxL8KJuOx-BSiWh6EvXO6xYGIXiZfVB4NiJ6xxpzdulg>/exec"; // 替換為您的 Google Apps Script 網址
+    const scriptUrl = "https://script.google.com/macros/s＜AKfycbwh7M3Eqm8mC5Xo_dNkPmRuxxL8KJuOx-BSiWh6EvXO6xYGIXiZfVB4NiJ6xxpzdulg>/exec"; // 替換為您的 Google Apps Script 網址
 
     function savePlayerData() {
       localStorage.setItem('playerData', JSON.stringify(playerData));
@@ -122,6 +122,21 @@
       document.querySelectorAll('.section').forEach(section => section.classList.add('hidden'));
       document.getElementById(target).classList.remove('hidden');
     }
+
+    function resetDailyStates() {
+      const today = new Date().toISOString().split('T')[0];
+      Object.keys(playerData).forEach(code => {
+        if (playerData[code].lastSignin !== today) {
+          playerData[code].lotteryPlayed = false;
+        }
+      });
+      savePlayerData();
+    }
+
+    // 頁面載入時重置每日狀態
+    window.onload = () => {
+      resetDailyStates();
+    };
 
     // 登錄功能
     document.getElementById('login-btn').addEventListener('click', () => {
