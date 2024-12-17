@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>玩家系統</title>
-  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.0/dist/JsBarcode.all.min.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -64,18 +63,19 @@
   <div class="container">
     <h1>玩家系統</h1>
     <div id="main-section" class="section active">
-      <h2>登入或註冊</h2>
-      <input type="text" id="login-code" placeholder="輸入代碼">
-      <input type="password" id="login-password" placeholder="輸入密碼">
-      <button id="login-btn">登入</button>
+      <h2>會員功能</h2>
+      <input type="text" id="code" placeholder="輸入代碼">
+      <input type="password" id="password" placeholder="輸入密碼">
+      <button id="login-btn">登錄</button>
       <button id="register-btn">註冊</button>
-      <p id="login-message"></p>
-      <h2>功能選單</h2>
-      <button class="nav-btn" data-target="signin-section">簽到</button>
-      <button class="nav-btn" data-target="query-section">查看</button>
-      <button class="nav-btn" data-target="redeem-section">兌換</button>
-      <button class="nav-btn" data-target="lottery-section">抽獎</button>
-      <button id="logout-btn">登出</button>
+      <div id="menu-section" class="hidden">
+        <button class="nav-btn" data-target="signin-section">簽到</button>
+        <button class="nav-btn" data-target="query-section">查看</button>
+        <button class="nav-btn" data-target="redeem-section">兌換</button>
+        <button class="nav-btn" data-target="lottery-section">抽獎</button>
+        <button id="logout-btn">登出</button>
+      </div>
+      <p id="message"></p>
     </div>
 
     <div id="signin-section" class="section hidden">
@@ -108,8 +108,6 @@
     let playerData = JSON.parse(localStorage.getItem('playerData')) || {};
     let currentPlayer = null;
 
-    const scriptUrl = "https://script.google.com/macros/s/<AKfycbwh7M3Eqm8mC5Xo_dNkPmRuxxL8KJuOx-BSiWh6EvXO6xYGIXiZfVB4NiJ6xxpzdulg>/exec";
-
     function savePlayerData() {
       localStorage.setItem('playerData', JSON.stringify(playerData));
     }
@@ -119,57 +117,57 @@
       document.getElementById(target).classList.remove('hidden');
     }
 
-    function resetDailyStates() {
-      const today = new Date().toISOString().split('T')[0];
-      Object.keys(playerData).forEach(code => {
-        if (playerData[code].lastSignin !== today) {
-          playerData[code].lotteryPlayed = false;
-        }
-      });
-      savePlayerData();
-    }
-
-    window.onload = () => {
-      resetDailyStates();
-    };
-
+    // 登錄功能
     document.getElementById('login-btn').addEventListener('click', () => {
-      const code = document.getElementById('login-code').value;
-      const password = document.getElementById('login-password').value;
+      const code = document.getElementById('code').value;
+      const password = document.getElementById('password').value;
 
       if (playerData[code] && playerData[code].password === password) {
         currentPlayer = playerData[code];
-        document.getElementById('login-message').textContent = "登錄成功！";
+        document.getElementById('message').textContent = "登錄成功！";
+        document.getElementById('menu-section').classList.remove('hidden');
       } else {
-        document.getElementById('login-message').textContent = "代碼或密碼錯誤！";
+        document.getElementById('message').textContent = "代碼或密碼錯誤！";
       }
     });
 
+    // 註冊功能
     document.getElementById('register-btn').addEventListener('click', () => {
-      const code = document.getElementById('login-code').value;
-      const password = document.getElementById('login-password').value;
+      const code = document.getElementById('code').value;
+      const password = document.getElementById('password').value;
 
       if (playerData[code]) {
-        document.getElementById('login-message').textContent = "該代碼已被註冊！";
+        document.getElementById('message').textContent = "該代碼已被註冊！";
       } else {
         playerData[code] = {
           password,
           points: 100,
           lastSignin: null,
-          lotteryPlayed: false,
-          code
+          lotteryPlayed: false
         };
         savePlayerData();
-        document.getElementById('login-message').textContent = "註冊成功！自動登錄中...";
+        document.getElementById('message').textContent = "註冊成功！自動登錄中...";
         currentPlayer = playerData[code];
+        document.getElementById('menu-section').classList.remove('hidden');
       }
     });
 
-    document.getElementById('logout-btn').addEventListener('click', () => {
-      currentPlayer = null;
-      document.getElementById('login-message').textContent = "已登出！請重新登入。";
+    // 導航功能
+    document.querySelectorAll('.nav-btn').forEach(button => {
+      button.addEventListener('click', () => {
+        const target = button.dataset.target;
+        switchSection(target);
+      });
     });
 
+    // 登出功能
+    document.getElementById('logout-btn').addEventListener('click', () => {
+      currentPlayer = null;
+      document.getElementById('menu-section').classList.add('hidden');
+      document.getElementById('message').textContent = "已登出！";
+    });
+
+    // 簽到功能
     document.getElementById('signin-btn').addEventListener('click', () => {
       const today = new Date().toISOString().split('T')[0];
       if (currentPlayer.lastSignin === today) {
@@ -182,10 +180,12 @@
       }
     });
 
+    // 查看功能
     document.querySelector('.nav-btn[data-target="query-section"]').addEventListener('click', () => {
       document.getElementById('query-message').textContent = `目前點數：${currentPlayer.points}`;
     });
 
+    // 兌換功能
     document.querySelectorAll('.redeem-btn').forEach(button => {
       button.addEventListener('click', () => {
         const item = button.dataset.item;
@@ -193,33 +193,14 @@
         if (currentPlayer.points >= cost) {
           currentPlayer.points -= cost;
           savePlayerData();
-          fetch(scriptUrl, {
-            method: 'POST',
-            body: JSON.stringify({ code: currentPlayer.code, itemName: item }),
-            headers: { 'Content-Type': 'application/json' }
-          }).then(response => response.json())
-            .then(data => {
-              document.getElementById('redeem-message').textContent = `成功兌換 ${item}，記錄已更新！`;
-            }).catch(err => {
-              document.getElementById('redeem-message').textContent = "兌換成功，但記錄時發生錯誤！";
-            });
+          document.getElementById('redeem-message').textContent = `成功兌換 ${item}！`;
         } else {
           document.getElementById('redeem-message').textContent = "點數不足！";
         }
       });
     });
 
+    // 抽獎功能
     document.getElementById('lottery-btn').addEventListener('click', () => {
       if (currentPlayer.lotteryPlayed) {
-        document.getElementById('lottery-message').textContent = "今天已經參加過抽獎了！";
-      } else {
-        const prize = Math.floor(Math.random() * 101);
-        currentPlayer.points += prize;
-        currentPlayer.lotteryPlayed = true;
-        savePlayerData();
-        document.getElementById('lottery-message').textContent = `抽獎成功！獲得 ${prize} 點。`;
-      }
-    });
-  </script>
-</body>
-</html>
+        document.getElementById('lottery-message').textContent = "今天
