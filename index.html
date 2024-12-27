@@ -7,49 +7,46 @@
   <style>
     body {
       font-family: Arial, sans-serif;
-      font-size: 18px;
-      background-color: #f9f9f9;
+      background-color: #f4f4f9;
       margin: 0;
       padding: 0;
     }
     .container {
       width: 90%;
-      max-width: 600px;
+      max-width: 800px;
       margin: 20px auto;
       padding: 20px;
-      background-color: #fff;
-      border: 1px solid #ddd;
+      background: white;
       border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     }
-    .section {
+    h1, h2 {
+      text-align: center;
+    }
+    .hidden {
       display: none;
     }
-    .active {
+    .section {
+      margin-bottom: 20px;
+    }
+    .section.active {
       display: block;
+    }
+    button, input {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      font-size: 16px;
     }
     button {
-      display: block;
-      width: 100%;
-      padding: 10px;
-      margin-bottom: 10px;
-      font-size: 16px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      background-color: #4CAF50;
+      background: #4caf50;
       color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 4px;
     }
     button:hover {
-      background-color: #45a049;
-    }
-    input {
-      width: 100%;
-      padding: 10px;
-      margin-bottom: 10px;
-      font-size: 16px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
+      background: #45a049;
     }
   </style>
 </head>
@@ -57,133 +54,149 @@
   <div class="container">
     <h1>玩家系統</h1>
 
-    <div id="login-section" class="section active">
-      <h2>登錄 / 註冊</h2>
+    <!-- 登錄/註冊區 -->
+    <div id="auth-section" class="section active">
+      <h2>登錄或註冊</h2>
       <input type="text" id="code" placeholder="輸入代碼">
       <input type="password" id="password" placeholder="輸入密碼">
       <button id="login-btn">登錄</button>
       <button id="register-btn">註冊</button>
-      <p id="login-message"></p>
+      <p id="auth-message"></p>
     </div>
 
-    <div id="menu-section" class="section">
-      <h2>會員功能</h2>
-      <button id="signin-btn">簽到</button>
-      <button id="redeem-code-btn">兌換碼</button>
-      <button id="lottery-btn">抽獎</button>
-      <button id="admin-btn">管理員功能</button>
+    <!-- 功能區 -->
+    <div id="menu-section" class="section hidden">
+      <h2>功能選單</h2>
+      <button class="nav-btn" data-target="redeem-section">兌換商品</button>
+      <button class="nav-btn" data-target="code-section">輸入兌換碼</button>
       <button id="logout-btn">登出</button>
     </div>
 
-    <div id="signin-section" class="section">
-      <h2>每日簽到</h2>
-      <p id="signin-message">簽到以獲得每日獎勵。</p>
-      <button id="confirm-signin-btn">確認簽到</button>
-    </div>
-
-    <div id="redeem-section" class="section">
-      <h2>兌換碼功能</h2>
-      <input type="text" id="redeem-code" placeholder="輸入兌換碼">
-      <button id="redeem-confirm-btn">兌換</button>
+    <!-- 兌換區 -->
+    <div id="redeem-section" class="section hidden">
+      <h2>兌換商品</h2>
+      <button class="redeem-btn" data-item="PUBG陪玩票" data-cost="10">PUBG陪玩票 (10點)</button>
+      <button class="redeem-btn" data-item="Minecraft陪玩票" data-cost="20">Minecraft陪玩票 (20點)</button>
       <p id="redeem-message"></p>
     </div>
 
-    <div id="lottery-section" class="section">
-      <h2>抽獎功能</h2>
-      <button id="lottery-draw-btn">抽獎</button>
-      <p id="lottery-message"></p>
-    </div>
-
-    <div id="admin-section" class="section">
-      <h2>管理員功能</h2>
-      <input type="text" id="new-redeem-code" placeholder="輸入新兌換碼">
-      <button id="set-redeem-code-btn">設置兌換碼</button>
-      <p id="admin-message"></p>
+    <!-- 輸入兌換碼區 -->
+    <div id="code-section" class="section hidden">
+      <h2>兌換碼</h2>
+      <input type="text" id="redeem-code" placeholder="輸入兌換碼">
+      <button id="redeem-code-btn">確認</button>
+      <p id="code-message"></p>
     </div>
   </div>
 
   <script>
-    const discordWebhookUrl = "https://discord.com/api/webhooks/你的WebhookURL"; // 替換為你的 Discord Webhook URL
-    let playerData = JSON.parse(localStorage.getItem("playerData")) || {};
+    let playerData = JSON.parse(localStorage.getItem('playerData')) || {};
     let currentPlayer = null;
-    let currentRedeemCode = null; // 當前兌換碼
 
+    const redemptionCodes = {
+      CHRISTMAS: { usedBy: [], reward: 50 },
+      NEWYEAR: { usedBy: [], reward: 100 }
+    };
+
+    // 儲存玩家資料
     function savePlayerData() {
-      localStorage.setItem("playerData", JSON.stringify(playerData));
+      localStorage.setItem('playerData', JSON.stringify(playerData));
     }
 
-    function switchSection(sectionId) {
-      document.querySelectorAll(".section").forEach(section => section.classList.remove("active"));
-      document.getElementById(sectionId).classList.add("active");
+    // 切換區域
+    function switchSection(target) {
+      document.querySelectorAll('.section').forEach(section => section.classList.add('hidden'));
+      document.getElementById(target).classList.remove('hidden');
     }
 
     // 登錄功能
-    document.getElementById("login-btn").addEventListener("click", () => {
-      const code = document.getElementById("code").value;
-      const password = document.getElementById("password").value;
+    document.getElementById('login-btn').addEventListener('click', () => {
+      const code = document.getElementById('code').value;
+      const password = document.getElementById('password').value;
 
       if (playerData[code] && playerData[code].password === password) {
-        currentPlayer = { code, ...playerData[code] };
-        document.getElementById("login-message").textContent = "登錄成功！";
-        switchSection("menu-section");
+        currentPlayer = playerData[code];
+        currentPlayer.code = code;
+        document.getElementById('auth-message').textContent = "登錄成功！";
+        switchSection('menu-section');
       } else {
-        document.getElementById("login-message").textContent = "代碼或密碼錯誤！";
+        document.getElementById('auth-message').textContent = "代碼或密碼錯誤！";
       }
     });
 
     // 註冊功能
-    document.getElementById("register-btn").addEventListener("click", () => {
-      const code = document.getElementById("code").value;
-      const password = document.getElementById("password").value;
+    document.getElementById('register-btn').addEventListener('click', () => {
+      const code = document.getElementById('code').value;
+      const password = document.getElementById('password').value;
 
       if (playerData[code]) {
-        document.getElementById("login-message").textContent = "該代碼已被註冊！";
+        document.getElementById('auth-message').textContent = "代碼已被註冊！";
       } else {
-        playerData[code] = { password, redeemedCodes: [] };
+        playerData[code] = { password, points: 100 };
         savePlayerData();
-        document.getElementById("login-message").textContent = "註冊成功！";
+        document.getElementById('auth-message').textContent = "註冊成功！";
       }
     });
 
-    // 管理員功能
-    document.getElementById("admin-btn").addEventListener("click", () => {
-      if (currentPlayer && currentPlayer.code === "10" && currentPlayer.password === "10") {
-        switchSection("admin-section");
-      } else {
-        alert("只有管理員可以進入此功能！");
-      }
+    // 登出功能
+    document.getElementById('logout-btn').addEventListener('click', () => {
+      currentPlayer = null;
+      switchSection('auth-section');
+      document.getElementById('auth-message').textContent = "已登出！";
     });
 
-    document.getElementById("set-redeem-code-btn").addEventListener("click", () => {
-      currentRedeemCode = document.getElementById("new-redeem-code").value;
-      fetch(discordWebhookUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content: `今天有特別節日，兌換碼是【${currentRedeemCode}】！` }),
-      }).then(() => {
-        document.getElementById("admin-message").textContent = "兌換碼已發佈到 Discord！";
-      }).catch(() => {
-        document.getElementById("admin-message").textContent = "兌換碼發佈失敗！";
+    // 兌換商品功能
+    document.querySelectorAll('.redeem-btn').forEach(button => {
+      button.addEventListener('click', () => {
+        const item = button.dataset.item;
+        const cost = parseInt(button.dataset.cost, 10);
+
+        if (currentPlayer.points >= cost) {
+          currentPlayer.points -= cost;
+          savePlayerData();
+          document.getElementById('redeem-message').textContent = `成功兌換：${item}`;
+        } else {
+          document.getElementById('redeem-message').textContent = "點數不足！";
+        }
       });
     });
 
-    // 兌換碼功能
-    document.getElementById("redeem-confirm-btn").addEventListener("click", () => {
-      const userCode = document.getElementById("redeem-code").value;
-      if (userCode === currentRedeemCode && !currentPlayer.redeemedCodes.includes(userCode)) {
-        currentPlayer.redeemedCodes.push(userCode);
-        savePlayerData();
-        document.getElementById("redeem-message").textContent = "兌換成功！";
+    // 輸入兌換碼功能
+    document.getElementById('redeem-code-btn').addEventListener('click', () => {
+      const code = document.getElementById('redeem-code').value;
+
+      if (redemptionCodes[code]) {
+        if (!redemptionCodes[code].usedBy.includes(currentPlayer.code)) {
+          redemptionCodes[code].usedBy.push(currentPlayer.code);
+          currentPlayer.points += redemptionCodes[code].reward;
+          savePlayerData();
+          document.getElementById('code-message').textContent = `成功兌換：+${redemptionCodes[code].reward} 點數！`;
+        } else {
+          document.getElementById('code-message').textContent = "此兌換碼已被使用過！";
+        }
       } else {
-        document.getElementById("redeem-message").textContent = "兌換碼無效或已使用！";
+        document.getElementById('code-message').textContent = "無效的兌換碼！";
       }
     });
 
-    // 簽到功能
-    document.getElementById("confirm-signin-btn").addEventListener("click", () => {
-      document.getElementById("signin-message").textContent = "簽到成功，獲得10點！";
-    });
+    // 發送 Discord Webhook 訊息
+    async function sendDiscordMessage(message) {
+      const webhookUrl = "1322224262261641329"; // 替換為你的 Webhook URL
+      try {
+        await fetch(webhookUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ content: message })
+        });
+        console.log("訊息已成功發送到 Discord");
+      } catch (error) {
+        console.error("發送失敗：", error);
+      }
+    }
 
-    // 抽獎功能
-    document.getElementById("lottery-draw-btn").addEventListener("click", () => {
-      const prize = Math.floor(Math.random() * 101); // 隨機獎
+    // 發送特別節日訊息
+    const specialEventMessage = "今天是特別節日！輸入兌換碼 NEWYEAR 獲取 10000 點數！";
+    sendDiscordMessage(specialEventMessage);
+  </script>
+</body>
+</html>
