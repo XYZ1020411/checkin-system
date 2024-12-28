@@ -5,10 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>玩家系統</title>
   <style>
-    body { font-family: Arial, sans-serif; font-size: 20px; margin: 0; padding: 0; background-color: #f9f9f9; }
+    body { font-family: Arial, sans-serif; font-size: 16px; margin: 0; padding: 0; background-color: #f9f9f9; }
     .container { width: 90%; max-width: 600px; margin: 20px auto; padding: 20px; background-color: #fff; border-radius: 8px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); }
     h1, h2 { text-align: center; }
-    button, input { width: 100%; padding: 10px; margin-bottom: 10px; font-size: 16px; border-radius: 4px; }
+    button, input { width: 100%; padding: 10px; margin: 5px 0; font-size: 16px; border-radius: 4px; }
     button { border: none; background-color: #4CAF50; color: white; cursor: pointer; }
     button:hover { background-color: #45a049; }
     .hidden { display: none; }
@@ -19,10 +19,8 @@
 <body>
   <div class="container">
     <h1>玩家系統</h1>
-
-    <!-- 主頁面 -->
     <div id="main-section" class="section active">
-      <h2>會員登錄/註冊</h2>
+      <h2>登錄 / 註冊</h2>
       <input type="text" id="code" placeholder="輸入代碼">
       <input type="password" id="password" placeholder="輸入密碼">
       <button id="login-btn">登錄</button>
@@ -30,60 +28,34 @@
       <p id="message"></p>
     </div>
 
-    <!-- 功能菜單 -->
     <div id="menu-section" class="section hidden">
       <h2>會員功能</h2>
       <button class="nav-btn" data-target="signin-section">簽到</button>
       <button class="nav-btn" data-target="query-section">查看</button>
       <button class="nav-btn" data-target="redeem-section">兌換</button>
       <button class="nav-btn" data-target="lottery-section">抽獎</button>
-      <button class="nav-btn" data-target="redeem-code-section">輸入兌換碼</button>
+      <button class="nav-btn" data-target="redeem-code-section">兌換碼</button>
       <button id="logout-btn">登出</button>
     </div>
 
-    <!-- 管理員功能 -->
     <div id="admin-section" class="section hidden">
       <h2>管理員功能</h2>
       <button class="admin-btn" data-target="add-code-section">新增兌換碼</button>
       <button class="admin-btn" data-target="view-members-section">查看會員</button>
-      <button class="admin-btn" data-target="manage-server-section">管理伺服器</button>
+      <button class="admin-btn" data-target="redeem-log-section">兌換記錄</button>
     </div>
 
-    <!-- 新增兌換碼 -->
-    <div id="add-code-section" class="section hidden">
-      <h2>新增兌換碼</h2>
-      <input type="text" id="new-code" placeholder="輸入新兌換碼">
-      <input type="number" id="code-points" placeholder="輸入兌換點數">
-      <button id="add-code-btn">新增兌換碼</button>
-      <p id="add-code-message"></p>
-    </div>
-
-    <!-- 查看會員 -->
-    <div id="view-members-section" class="section hidden">
-      <h2>會員清單</h2>
-      <ul id="members-list"></ul>
-    </div>
-
-    <!-- 管理伺服器 -->
-    <div id="manage-server-section" class="section hidden">
-      <h2>管理伺服器</h2>
-      <p>管理伺服器功能未實現。</p>
-    </div>
-
-    <!-- 簽到 -->
     <div id="signin-section" class="section hidden">
       <h2>每日簽到</h2>
       <button id="signin-btn">簽到</button>
       <p id="signin-message"></p>
     </div>
 
-    <!-- 查看 -->
     <div id="query-section" class="section hidden">
       <h2>查看點數</h2>
       <p id="query-message"></p>
     </div>
 
-    <!-- 兌換 -->
     <div id="redeem-section" class="section hidden">
       <h2>兌換商品</h2>
       <button class="redeem-btn" data-item="PUBG陪玩票" data-cost="10">PUBG陪玩票 (10點)</button>
@@ -92,30 +64,48 @@
       <p id="redeem-message"></p>
     </div>
 
-    <!-- 抽獎 -->
     <div id="lottery-section" class="section hidden">
       <h2>每日抽獎</h2>
       <button id="lottery-btn">抽獎</button>
       <p id="lottery-message"></p>
     </div>
 
-    <!-- 兌換碼 -->
     <div id="redeem-code-section" class="section hidden">
-      <h2>輸入兌換碼</h2>
+      <h2>兌換碼</h2>
       <input type="text" id="redeem-code" placeholder="輸入兌換碼">
       <button id="redeem-code-btn">提交兌換碼</button>
       <p id="redeem-code-message"></p>
+    </div>
+
+    <div id="add-code-section" class="section hidden">
+      <h2>新增兌換碼</h2>
+      <input type="text" id="new-code" placeholder="輸入新兌換碼">
+      <input type="number" id="code-points" placeholder="輸入兌換點數">
+      <button id="add-code-btn">新增</button>
+      <p id="add-code-message"></p>
+    </div>
+
+    <div id="view-members-section" class="section hidden">
+      <h2>會員清單</h2>
+      <ul id="members-list"></ul>
+    </div>
+
+    <div id="redeem-log-section" class="section hidden">
+      <h2>兌換記錄</h2>
+      <ul id="redeem-log-list"></ul>
     </div>
   </div>
 
   <script>
     let playerData = JSON.parse(localStorage.getItem('playerData')) || {};
+    let redeemLog = JSON.parse(localStorage.getItem('redeemLog')) || [];
     let currentPlayer = null;
     const adminCode = '10';
     const adminPassword = '10';
 
-    function savePlayerData() {
+    function saveData() {
       localStorage.setItem('playerData', JSON.stringify(playerData));
+      localStorage.setItem('redeemLog', JSON.stringify(redeemLog));
     }
 
     function switchSection(target) {
@@ -123,49 +113,47 @@
       document.getElementById(target).classList.remove('hidden');
     }
 
+    // 登錄功能
     document.getElementById('login-btn').addEventListener('click', () => {
       const code = document.getElementById('code').value;
       const password = document.getElementById('password').value;
 
       if (code === adminCode && password === adminPassword) {
-        document.getElementById('message').textContent = "管理員登錄成功！";
         switchSection('admin-section');
         return;
       }
 
       if (playerData[code] && playerData[code].password === password) {
-        currentPlayer = playerData[code];
-        document.getElementById('message').textContent = "登錄成功！";
+        currentPlayer = code;
         switchSection('menu-section');
       } else {
-        document.getElementById('message').textContent = "代碼或密碼錯誤！";
+        alert("代碼或密碼錯誤！");
       }
     });
 
-    document.getElementById('register-btn').addEventListener('click', () => {
-      const code = document.getElementById('code').value;
-      const password = document.getElementById('password').value;
-      if (!playerData[code]) {
-        playerData[code] = { password, points: 100 };
-        savePlayerData();
-        document.getElementById('message').textContent = "註冊成功！";
-      } else {
-        document.getElementById('message').textContent = "該代碼已被註冊！";
-      }
+    // 兌換功能
+    document.querySelectorAll('.redeem-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const item = btn.dataset.item;
+        const cost = parseInt(btn.dataset.cost);
+        if (playerData[currentPlayer].points >= cost) {
+          playerData[currentPlayer].points -= cost;
+          redeemLog.push({ user: currentPlayer, item, time: new Date().toLocaleString() });
+          saveData();
+          alert("兌換成功！");
+        } else {
+          alert("點數不足！");
+        }
+      });
     });
 
-    document.querySelectorAll('.nav-btn').forEach(button => {
-      button.addEventListener('click', () => switchSection(button.dataset.target));
+    // 查看兌換記錄
+    document.querySelector('[data-target="redeem-log-section"]').addEventListener('click', () => {
+      const logList = document.getElementById('redeem-log-list');
+      logList.innerHTML = redeemLog.map(log => `<li>${log.user} 兌換 ${log.item} 時間: ${log.time}</li>`).join('');
     });
 
-    document.querySelectorAll('.admin-btn').forEach(button => {
-      button.addEventListener('click', () => switchSection(button.dataset.target));
-    });
-
-    document.getElementById('logout-btn').addEventListener('click', () => {
-      currentPlayer = null;
-      switchSection('main-section');
-    });
-
-    document.getElementById('add-code-btn').addEventListener('click', () => {
-      const newCode = document.getElementById('new
+    saveData();
+  </script>
+</body>
+</html>
