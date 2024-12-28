@@ -69,6 +69,43 @@
       <h2>管理伺服器</h2>
       <p>管理伺服器功能未實現。</p>
     </div>
+
+    <!-- 簽到 -->
+    <div id="signin-section" class="section hidden">
+      <h2>每日簽到</h2>
+      <button id="signin-btn">簽到</button>
+      <p id="signin-message"></p>
+    </div>
+
+    <!-- 查看 -->
+    <div id="query-section" class="section hidden">
+      <h2>查看點數</h2>
+      <p id="query-message"></p>
+    </div>
+
+    <!-- 兌換 -->
+    <div id="redeem-section" class="section hidden">
+      <h2>兌換商品</h2>
+      <button class="redeem-btn" data-item="PUBG陪玩票" data-cost="10">PUBG陪玩票 (10點)</button>
+      <button class="redeem-btn" data-item="Minecraft陪玩票" data-cost="20">Minecraft陪玩票 (20點)</button>
+      <button class="redeem-btn" data-item="佳音購物票" data-cost="50">佳音購物票 (50點)</button>
+      <p id="redeem-message"></p>
+    </div>
+
+    <!-- 抽獎 -->
+    <div id="lottery-section" class="section hidden">
+      <h2>每日抽獎</h2>
+      <button id="lottery-btn">抽獎</button>
+      <p id="lottery-message"></p>
+    </div>
+
+    <!-- 兌換碼 -->
+    <div id="redeem-code-section" class="section hidden">
+      <h2>輸入兌換碼</h2>
+      <input type="text" id="redeem-code" placeholder="輸入兌換碼">
+      <button id="redeem-code-btn">提交兌換碼</button>
+      <p id="redeem-code-message"></p>
+    </div>
   </div>
 
   <script>
@@ -131,16 +168,4 @@
     });
 
     document.getElementById('add-code-btn').addEventListener('click', () => {
-      const newCode = document.getElementById('new-code').value;
-      const points = parseInt(document.getElementById('code-points').value, 10);
-
-      if (newCode && points > 0) {
-        // 在這裡新增到兌換碼系統
-        document.getElementById('add-code-message').textContent = `新增成功：${newCode} (${points}點)`;
-      } else {
-        document.getElementById('add-code-message').textContent = "請輸入有效的兌換碼和點數！";
-      }
-    });
-  </script>
-</body>
-</html>
+      const newCode = document.getElementById('new
