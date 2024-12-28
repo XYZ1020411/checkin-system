@@ -5,63 +5,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>玩家系統</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      font-size: 20px;
-      background-color: #f9f9f9;
-      margin: 0;
-      padding: 0;
-    }
-    .container {
-      width: 90%;
-      max-width: 600px;
-      margin: 0 auto;
-      padding: 20px;
-      background-color: #fff;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    }
-    h1, h2 {
-      text-align: center;
-    }
-    button {
-      display: block;
-      width: 100%;
-      padding: 10px;
-      margin-bottom: 10px;
-      font-size: 18px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      background-color: #4CAF50;
-      color: white;
-    }
-    button:hover {
-      background-color: #45a049;
-    }
-    .hidden {
-      display: none;
-    }
-    .section {
-      display: none;
-    }
-    .active {
-      display: block;
-    }
-    input {
-      width: 100%;
-      padding: 10px;
-      margin-bottom: 10px;
-      font-size: 16px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-    }
+    body { font-family: Arial, sans-serif; font-size: 20px; margin: 0; padding: 0; background-color: #f9f9f9; }
+    .container { width: 90%; max-width: 600px; margin: 20px auto; padding: 20px; background-color: #fff; border-radius: 8px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); }
+    h1, h2 { text-align: center; }
+    button, input { width: 100%; padding: 10px; margin-bottom: 10px; font-size: 16px; border-radius: 4px; }
+    button { border: none; background-color: #4CAF50; color: white; cursor: pointer; }
+    button:hover { background-color: #45a049; }
+    .hidden { display: none; }
+    .section { display: none; }
+    .active { display: block; }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>玩家系統</h1>
+
+    <!-- 主頁面 -->
     <div id="main-section" class="section active">
       <h2>會員登錄/註冊</h2>
       <input type="text" id="code" placeholder="輸入代碼">
@@ -71,6 +30,7 @@
       <p id="message"></p>
     </div>
 
+    <!-- 功能菜單 -->
     <div id="menu-section" class="section hidden">
       <h2>會員功能</h2>
       <button class="nav-btn" data-target="signin-section">簽到</button>
@@ -81,57 +41,44 @@
       <button id="logout-btn">登出</button>
     </div>
 
+    <!-- 管理員功能 -->
     <div id="admin-section" class="section hidden">
-      <h2>管理者功能</h2>
-      <button id="view-users-btn">查看所有會員</button>
-      <div id="users-list"></div>
-      <button id="logout-admin-btn">登出</button>
+      <h2>管理員功能</h2>
+      <button class="admin-btn" data-target="add-code-section">新增兌換碼</button>
+      <button class="admin-btn" data-target="view-members-section">查看會員</button>
+      <button class="admin-btn" data-target="manage-server-section">管理伺服器</button>
     </div>
 
-    <div id="signin-section" class="section hidden">
-      <h2>每日簽到</h2>
-      <button id="signin-btn">簽到</button>
-      <p id="signin-message"></p>
+    <!-- 新增兌換碼 -->
+    <div id="add-code-section" class="section hidden">
+      <h2>新增兌換碼</h2>
+      <input type="text" id="new-code" placeholder="輸入新兌換碼">
+      <input type="number" id="code-points" placeholder="輸入兌換點數">
+      <button id="add-code-btn">新增兌換碼</button>
+      <p id="add-code-message"></p>
     </div>
 
-    <div id="query-section" class="section hidden">
-      <h2>查看點數</h2>
-      <p id="query-message"></p>
+    <!-- 查看會員 -->
+    <div id="view-members-section" class="section hidden">
+      <h2>會員清單</h2>
+      <ul id="members-list"></ul>
     </div>
 
-    <div id="redeem-section" class="section hidden">
-      <h2>兌換商品</h2>
-      <button class="redeem-btn" data-item="PUBG陪玩票" data-cost="10">PUBG陪玩票 (10點)</button>
-      <button class="redeem-btn" data-item="Minecraft陪玩票" data-cost="20">Minecraft陪玩票 (20點)</button>
-      <button class="redeem-btn" data-item="佳音購物票" data-cost="50">佳音購物票 (50點)</button>
-      <p id="redeem-message"></p>
-    </div>
-
-    <div id="lottery-section" class="section hidden">
-      <h2>每日抽獎</h2>
-      <button id="lottery-btn">抽獎</button>
-      <p id="lottery-message"></p>
-    </div>
-
-    <div id="redeem-code-section" class="section hidden">
-      <h2>輸入兌換碼</h2>
-      <input type="text" id="redeem-code" placeholder="輸入兌換碼">
-      <button id="redeem-code-btn">提交兌換碼</button>
-      <p id="redeem-code-message"></p>
+    <!-- 管理伺服器 -->
+    <div id="manage-server-section" class="section hidden">
+      <h2>管理伺服器</h2>
+      <p>管理伺服器功能未實現。</p>
     </div>
   </div>
 
   <script>
     let playerData = JSON.parse(localStorage.getItem('playerData')) || {};
     let currentPlayer = null;
-    let usedRedeemCodes = JSON.parse(localStorage.getItem('usedRedeemCodes')) || [];
+    const adminCode = '10';
+    const adminPassword = '10';
 
     function savePlayerData() {
       localStorage.setItem('playerData', JSON.stringify(playerData));
-    }
-
-    function saveUsedRedeemCodes() {
-      localStorage.setItem('usedRedeemCodes', JSON.stringify(usedRedeemCodes));
     }
 
     function switchSection(target) {
@@ -139,20 +86,18 @@
       document.getElementById(target).classList.remove('hidden');
     }
 
-    // 登錄功能
     document.getElementById('login-btn').addEventListener('click', () => {
       const code = document.getElementById('code').value;
       const password = document.getElementById('password').value;
 
-      if (code === '10' && password === '10') {
-        document.getElementById('message').textContent = "管理者登錄成功！";
+      if (code === adminCode && password === adminPassword) {
+        document.getElementById('message').textContent = "管理員登錄成功！";
         switchSection('admin-section');
         return;
       }
 
       if (playerData[code] && playerData[code].password === password) {
         currentPlayer = playerData[code];
-        currentPlayer.code = code;
         document.getElementById('message').textContent = "登錄成功！";
         switchSection('menu-section');
       } else {
@@ -160,44 +105,42 @@
       }
     });
 
-    // 註冊功能
     document.getElementById('register-btn').addEventListener('click', () => {
       const code = document.getElementById('code').value;
       const password = document.getElementById('password').value;
-
-      if (playerData[code]) {
-        document.getElementById('message').textContent = "該代碼已被註冊！";
-      } else {
-        playerData[code] = {
-          password,
-          points: 100,
-          lastSignin: null,
-          lotteryPlayed: false
-        };
+      if (!playerData[code]) {
+        playerData[code] = { password, points: 100 };
         savePlayerData();
-        document.getElementById('message').textContent = "註冊成功！自動登錄中...";
-        currentPlayer = playerData[code];
-        currentPlayer.code = code;
-        switchSection('menu-section');
+        document.getElementById('message').textContent = "註冊成功！";
+      } else {
+        document.getElementById('message').textContent = "該代碼已被註冊！";
       }
     });
 
-    // 查看所有會員
-    document.getElementById('view-users-btn').addEventListener('click', () => {
-      const usersList = document.getElementById('users-list');
-      usersList.innerHTML = '<h3>會員列表</h3>';
-      for (const code in playerData) {
-        usersList.innerHTML += `<p>代碼: ${code}, 點數: ${playerData[code].points}</p>`;
-      }
-    });
-
-    // 管理者登出
-    document.getElementById('logout-admin-btn').addEventListener('click', () => {
-      switchSection('main-section');
-      document.getElementById('message').textContent = "已登出！";
-    });
-
-    // 導航功能
     document.querySelectorAll('.nav-btn').forEach(button => {
-      button.addEventListener('click', () => {
-        const target = button.dataset
+      button.addEventListener('click', () => switchSection(button.dataset.target));
+    });
+
+    document.querySelectorAll('.admin-btn').forEach(button => {
+      button.addEventListener('click', () => switchSection(button.dataset.target));
+    });
+
+    document.getElementById('logout-btn').addEventListener('click', () => {
+      currentPlayer = null;
+      switchSection('main-section');
+    });
+
+    document.getElementById('add-code-btn').addEventListener('click', () => {
+      const newCode = document.getElementById('new-code').value;
+      const points = parseInt(document.getElementById('code-points').value, 10);
+
+      if (newCode && points > 0) {
+        // 在這裡新增到兌換碼系統
+        document.getElementById('add-code-message').textContent = `新增成功：${newCode} (${points}點)`;
+      } else {
+        document.getElementById('add-code-message').textContent = "請輸入有效的兌換碼和點數！";
+      }
+    });
+  </script>
+</body>
+</html>
