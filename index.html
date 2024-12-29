@@ -113,7 +113,6 @@
       document.getElementById(target).classList.remove('hidden');
     }
 
-    // 登錄功能
     document.getElementById('login-btn').addEventListener('click', () => {
       const code = document.getElementById('code').value;
       const password = document.getElementById('password').value;
@@ -131,7 +130,31 @@
       }
     });
 
-    // 兌換功能
+    document.getElementById('register-btn').addEventListener('click', () => {
+      const code = document.getElementById('code').value;
+      const password = document.getElementById('password').value;
+      if (!playerData[code]) {
+        playerData[code] = { password, points: 10 };
+        saveData();
+        alert("註冊成功！");
+      } else {
+        alert("代碼已被註冊！");
+      }
+    });
+
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+      btn.addEventListener('click', () => switchSection(btn.dataset.target));
+    });
+
+    document.querySelectorAll('.admin-btn').forEach(btn => {
+      btn.addEventListener('click', () => switchSection(btn.dataset.target));
+    });
+
+    document.getElementById('logout-btn').addEventListener('click', () => {
+      currentPlayer = null;
+      switchSection('main-section');
+    });
+
     document.querySelectorAll('.redeem-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const item = btn.dataset.item;
@@ -147,7 +170,6 @@
       });
     });
 
-    // 查看兌換記錄
     document.querySelector('[data-target="redeem-log-section"]').addEventListener('click', () => {
       const logList = document.getElementById('redeem-log-list');
       logList.innerHTML = redeemLog.map(log => `<li>${log.user} 兌換 ${log.item} 時間: ${log.time}</li>`).join('');
