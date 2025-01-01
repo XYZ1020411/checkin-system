@@ -5,20 +5,58 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>玩家系統</title>
   <style>
-    body { font-family: Arial, sans-serif; font-size: 16px; margin: 0; padding: 0; background-color: #f9f9f9; }
-    .container { width: 90%; max-width: 600px; margin: 20px auto; padding: 20px; background-color: #fff; border-radius: 8px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); }
-    h1, h2 { text-align: center; }
-    button, input { width: 100%; padding: 10px; margin: 5px 0; font-size: 16px; border-radius: 4px; }
-    button { border: none; background-color: #4CAF50; color: white; cursor: pointer; }
-    button:hover { background-color: #45a049; }
-    .hidden { display: none; }
-    .section { display: none; }
-    .active { display: block; }
+    body {
+      font-family: Arial, sans-serif;
+      font-size: 16px;
+      margin: 0;
+      padding: 0;
+      background-color: #f9f9f9;
+    }
+    .container {
+      width: 90%;
+      max-width: 600px;
+      margin: 20px auto;
+      padding: 20px;
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    h1, h2 {
+      text-align: center;
+    }
+    button, input {
+      width: 100%;
+      padding: 10px;
+      margin: 5px 0;
+      font-size: 16px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+    button {
+      border: none;
+      background-color: #4CAF50;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    .hidden {
+      display: none;
+    }
+    .section {
+      display: none;
+    }
+    .active {
+      display: block;
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>玩家系統</h1>
+    
+    <!-- 登錄 / 註冊 -->
     <div id="main-section" class="section active">
       <h2>登錄 / 註冊</h2>
       <input type="text" id="code" placeholder="輸入代碼">
@@ -28,6 +66,7 @@
       <p id="message"></p>
     </div>
 
+    <!-- 會員功能 -->
     <div id="menu-section" class="section hidden">
       <h2>會員功能</h2>
       <button class="nav-btn" data-target="signin-section">簽到</button>
@@ -38,6 +77,7 @@
       <button id="logout-btn">登出</button>
     </div>
 
+    <!-- 管理員功能 -->
     <div id="admin-section" class="section hidden">
       <h2>管理員功能</h2>
       <button class="admin-btn" data-target="add-code-section">新增兌換碼</button>
@@ -45,6 +85,7 @@
       <button class="admin-btn" data-target="redeem-log-section">兌換記錄</button>
     </div>
 
+    <!-- 各種功能區域 -->
     <div id="signin-section" class="section hidden">
       <h2>每日簽到</h2>
       <button id="signin-btn">簽到</button>
@@ -97,8 +138,8 @@
   </div>
 
   <script>
-    let playerData = JSON.parse(localStorage.getItem('playerData')) || {};
-    let redeemLog = JSON.parse(localStorage.getItem('redeemLog')) || [];
+    const playerData = JSON.parse(localStorage.getItem('playerData')) || {};
+    const redeemLog = JSON.parse(localStorage.getItem('redeemLog')) || [];
     let currentPlayer = null;
     const adminCode = '10';
     const adminPassword = '10';
@@ -113,40 +154,37 @@
       document.getElementById(target).classList.remove('hidden');
     }
 
-    document.getElementById('login-btn').addEventListener('click', () => {
+    function handleLogin() {
       const code = document.getElementById('code').value;
       const password = document.getElementById('password').value;
 
       if (code === adminCode && password === adminPassword) {
         switchSection('admin-section');
-        return;
-      }
-
-      if (playerData[code] && playerData[code].password === password) {
+      } else if (playerData[code]?.password === password) {
         currentPlayer = code;
         switchSection('menu-section');
       } else {
         alert("代碼或密碼錯誤！");
       }
-    });
+    }
 
-    document.getElementById('register-btn').addEventListener('click', () => {
+    function handleRegister() {
       const code = document.getElementById('code').value;
       const password = document.getElementById('password').value;
+
       if (!playerData[code]) {
-        playerData[code] = { password, points: 10 };
+        playerData[code] = { password, points: 100 };
         saveData();
         alert("註冊成功！");
       } else {
         alert("代碼已被註冊！");
       }
-    });
+    }
 
-    document.querySelectorAll('.nav-btn').forEach(btn => {
-      btn.addEventListener('click', () => switchSection(btn.dataset.target));
-    });
+    document.getElementById('login-btn').addEventListener('click', handleLogin);
+    document.getElementById('register-btn').addEventListener('click', handleRegister);
 
-    document.querySelectorAll('.admin-btn').forEach(btn => {
+    document.querySelectorAll('.nav-btn, .admin-btn').forEach(btn => {
       btn.addEventListener('click', () => switchSection(btn.dataset.target));
     });
 
