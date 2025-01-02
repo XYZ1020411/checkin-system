@@ -185,7 +185,9 @@
     document.getElementById('register-btn').addEventListener('click', handleRegister);
 
     document.querySelectorAll('.nav-btn, .admin-btn').forEach(btn => {
-      btn.addEventListener('click', () => switchSection(btn.dataset.target));
+      btn.addEventListener('click', function() {
+        switchSection(this.dataset.target);
+      });
     });
 
     document.getElementById('logout-btn').addEventListener('click', () => {
@@ -194,9 +196,9 @@
     });
 
     document.querySelectorAll('.redeem-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const item = btn.dataset.item;
-        const cost = parseInt(btn.dataset.cost);
+      btn.addEventListener('click', function() {
+        const item = this.dataset.item;
+        const cost = parseInt(this.dataset.cost);
         if (playerData[currentPlayer].points >= cost) {
           playerData[currentPlayer].points -= cost;
           redeemLog.push({ user: currentPlayer, item, time: new Date().toLocaleString() });
