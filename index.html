@@ -48,10 +48,6 @@
             color: red;
             text-align: center;
         }
-        .social-login {
-            text-align: center;
-            margin-top: 20px;
-        }
     </style>
 </head>
 <body>
@@ -59,8 +55,8 @@
 <div class="container">
     <h2 id="form-title">登錄</h2>
     <form id="login-form">
-        <label for="login-email">電子郵件:</label>
-        <input type="email" id="login-email" required><br>
+        <label for="login-code">代碼:</label>
+        <input type="text" id="login-code" required><br>
         <label for="login-password">密碼:</label>
         <input type="password" id="login-password" required><br>
         <button type="submit">登錄</button>
@@ -70,10 +66,8 @@
     <div class="hidden" id="register-section">
         <h2>註冊</h2>
         <form id="register-form">
-            <label for="register-username">用戶名:</label>
-            <input type="text" id="register-username" required><br>
-            <label for="register-email">電子郵件:</label>
-            <input type="email" id="register-email" required><br>
+            <label for="register-code">代碼:</label>
+            <input type="text" id="register-code" required><br>
             <label for="register-password">密碼:</label>
             <input type="password" id="register-password" required><br>
             <label for="register-confirm-password">確認密碼:</label>
@@ -85,17 +79,12 @@
     </div>
 
     <button id="toggle-btn">切換到註冊</button>
-    <div class="social-login">
-        <p>或使用以下方式登錄：</p>
-        <button id="facebook-login">Facebook 登錄</button>
-        <button id="google-login">Google 登錄</button>
-    </div>
     
     <div class="hidden" id="forgot-password-section">
         <h2>忘記密碼</h2>
         <form id="forgot-password-form">
-            <label for="forgot-email">電子郵件:</label>
-            <input type="email" id="forgot-email" required><br>
+            <label for="forgot-code">代碼:</label>
+            <input type="text" id="forgot-code" required><br>
             <button type="submit">重置密碼</button>
             <div class="message" id="forgot-message"></div>
         </form>
@@ -168,19 +157,19 @@
 
     loginForm.addEventListener('submit', function(e) {
         e.preventDefault();
-        const email = document.getElementById('login-email').value;
+        const code = document.getElementById('login-code').value;
         const password = document.getElementById('login-password').value;
 
         // 模擬登錄邏輯
-        if (email === "admin@example.com" && password === "admin") {
+        if (code === "admin" && password === "admin") {
             isAdmin = true;
             alert('管理員登錄成功！');
             showDashboard();
-        } else if (email === "test@example.com" && password === "password") {
+        } else if (code === "user" && password === "password") {
             alert('登錄成功！');
             showDashboard();
         } else {
-            loginMessage.textContent = '登錄失敗：電子郵件或密碼錯誤。';
+            loginMessage.textContent = '登錄失敗：代碼或密碼錯誤。';
         }
     });
 
@@ -197,8 +186,7 @@
 
     registerSection.querySelector('form').addEventListener('submit', function(e) {
         e.preventDefault();
-        const username = document.getElementById('register-username').value;
-        const email = document.getElementById('register-email').value;
+        const code = document.getElementById('register-code').value;
         const password = document.getElementById('register-password').value;
         const confirmPassword = document.getElementById('register-confirm-password').value;
 
@@ -224,19 +212,11 @@
 
     document.getElementById('forgot-password-form').addEventListener('submit', function(e) {
         e.preventDefault();
-        const email = document.getElementById('forgot-email').value;
+        const code = document.getElementById('forgot-code').value;
 
         // 模擬重置密碼邏輯
-        alert(`重置密碼鏈接已發送到 ${email}`);
+        alert(`重置密碼鏈接已發送到代碼 ${code}`);
         forgotMessage.textContent = ''; // 清除消息
-    });
-
-    document.getElementById('facebook-login').addEventListener('click', function() {
-        alert('使用 Facebook 登錄');
-    });
-
-    document.getElementById('google-login').addEventListener('click', function() {
-        alert('使用 Google 登錄');
     });
 
     // 會員功能
@@ -299,7 +279,7 @@
             }
         }
 
-        passwordStrength.textContent = `密碼強度：${strength}`;
+        document.getElementById('password-strength').textContent = `密碼強度：${strength}`;
     });
 </script>
 
