@@ -285,3 +285,29 @@
 
 </body>
 </html>
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>按鈕事件示範</title>
+</head>
+<body>
+
+    <button id="myButton">點擊我</button>
+    <div id="message"></div>
+
+    <script>
+        // 確保 DOM 完全加載後再添加事件監聽器
+        document.addEventListener('DOMContentLoaded', function() {
+            const button = document.getElementById('myButton');
+            const messageDiv = document.getElementById('message');
+
+            button.addEventListener('click', function() {
+                messageDiv.textContent = '按鈕已被點擊！';
+            });
+        });
+    </script>
+
+</body>
+</html>
