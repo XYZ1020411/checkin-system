@@ -166,6 +166,12 @@
         // 檢查用戶是否存在並且密碼正確
         if (registeredUsers[code] && registeredUsers[code] === password) {
             isLoggedIn = true; // 設置為已登錄
+
+            // 檢查是否為管理員帳號
+            if (code.length === 10 && password.length === 10) {
+                isAdmin = true; // 設置為管理員
+            }
+
             alert('登錄成功！');
             showDashboard();
         } else {
