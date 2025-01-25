@@ -124,15 +124,17 @@
 </div>
 
 <script>
-    let isAdmin = false; // 模擬管理員狀態
     let points = 100; // 模擬會員點數
     let hasSignedInToday = false; // 簽到狀態
     let hasLotteryEnteredToday = false; // 抽獎狀態
     let usedRedeemCodes = new Set(); // 存儲已使用的兌換碼
     let redeemCodes = new Map(); // 存儲可用的兌換碼和對應的點數
     let isLoggedIn = false; // 用戶登錄狀態
-    let isHoliday = false; // 是否為節慶
+    let isAdmin = false; // 模擬管理員狀態
     let registeredUsers = {}; // 存儲註冊用戶的代碼和密碼
+
+    // 預設管理員帳號
+    registeredUsers["admin12345"] = "password12345"; // 10位數的帳號密碼設為管理員
 
     function toggleForms() {
         const registerSection = document.getElementById('register-section');
@@ -249,23 +251,12 @@
     function signIn() {
         const signInMessage = document.getElementById('sign-in-message');
         
-        // 確認今天是否為節慶
-        if (isHoliday) {
-            if (hasSignedInToday) {
-                signInMessage.textContent = '您今天已經簽到過了。';
-            } else {
-                signInMessage.textContent = '簽到成功！獲得 1000 點。';
-                points += 1000; // 簽到獲得 1000 點
-                hasSignedInToday = true; // 設置為已簽到
-            }
+        if (hasSignedInToday) {
+            signInMessage.textContent = '您今天已經簽到過了。';
         } else {
-            if (hasSignedInToday) {
-                signInMessage.textContent = '您今天已經簽到過了。';
-            } else {
-                signInMessage.textContent = '簽到成功！獲得 10 點。';
-                points += 10; // 簽到獲得 10 點
-                hasSignedInToday = true; // 設置為已簽到
-            }
+            signInMessage.textContent = '簽到成功！獲得 10 點。';
+            points += 10; // 簽到獲得 10 點
+            hasSignedInToday = true; // 設置為已簽到
         }
     }
 
@@ -309,11 +300,6 @@
             document.getElementById('new-redeem-code').value = ''; // 清空輸入框
             document.getElementById('redeem-points').value = ''; // 清空點數輸入框
             document.getElementById('holiday').value = ''; // 清空節慶輸入框
-
-            // 檢查是否為節慶
-            if (holiday) {
-                isHoliday = true; // 設置為節慶
-            }
         } else {
             adminMessage.textContent = '請輸入有效的兌換碼和點數。';
         }
