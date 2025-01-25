@@ -5,19 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>會員管理系統</title>
     <style>
-        body { font-family: Arial, sans-serif; background-image: url('https://example.com/festival-background.jpg'); background-size: cover; color: white; }
-        .container { max-width: 400px; margin: auto; padding: 20px; background: rgba(0, 0, 0, 0.7); border-radius: 5px; }
-        input { width: 100%; padding: 10px; margin: 10px 0; }
-        button { padding: 10px; width: 100%; }
-        .hidden { display: none; }
+        /* ... 之前的CSS樣式 ... */
     </style>
 </head>
 <body>
 
 <div class="container">
     <h2 id="formTitle">註冊</h2>
-    <input type="text" id="username" placeholder="用戶名">
-    <input type="password" id="password" placeholder="密碼">
+    <input type="text" id="username" placeholder="用戶名" required>
+    <input type="password" id="password" placeholder="密碼" required>
     <button id="submitButton" onclick="register()">註冊</button>
     <button class="hidden" id="loginButton" onclick="showLogin()">登錄</button>
     <p id="message"></p>
@@ -26,11 +22,16 @@
 <div class="container hidden" id="adminContainer">
     <h2>管理員功能</h2>
     <button onclick="viewUsers()">查看所有用戶</button>
+    <input type="text" id="redeemCode" placeholder="輸入兌換碼">
+    <input type="number" id="points" placeholder="增加點數" min="1">
+    <button onclick="addRedeemCode()">新增兌換碼</button>
+    <button onclick="redeemCode()">兌換兌換碼</button>
     <div id="userList" class="hidden"></div>
 </div>
 
 <script>
     const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers')) || {};
+    const redeemCodes = JSON.parse(localStorage.getItem('redeemCodes')) || {};
     let currentUser = null;
 
     // 預設管理員帳號
@@ -38,7 +39,8 @@
         registeredUsers["xyz1020411"] = {
             password: "xyz1020411",
             points: 1000,
-            isAdmin: true
+            isAdmin: true,
+            usedCodes: []  // 新增已使用兌換碼的屬性
         };
         localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers));
     }
@@ -52,7 +54,7 @@
             return;
         }
 
-        registeredUsers[username] = { password: password, points: 0, isAdmin: false };
+        registeredUsers[username] = { password: password, points: 0, isAdmin: false, usedCodes: [] };
         localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers));
         document.getElementById('message').innerText = "註冊成功！";
         showLogin();
@@ -107,6 +109,40 @@
             userList.appendChild(userDiv);
         }
         userList.classList.remove('hidden');
+    }
+
+    function addRedeemCode() {
+        const code = document.getElementById('redeemCode').value;
+        const points = parseInt(document.getElementById('points').value);
+
+        if (!code || isNaN(points) || points <= 0) {
+            document.getElementById('message').innerText = "請輸入有效的兌換碼和點數！";
+            return;
+        }
+
+        redeemCodes[code] = points;
+        localStorage.setItem('redeemCodes', JSON.stringify(redeemCodes));
+        document.getElementById('message').innerText = "新增兌換碼成功！";
+    }
+
+    function redeemCode() {
+        const code = document.getElementById('redeemCode').value;
+        const points = redeemCodes[code];
+
+        if (points) {
+            if (currentUser.usedCodes.includes(code)) {
+                document.getElementById('message').innerText = "此兌換碼已被使用過！";
+                return;
+            }
+
+            currentUser.points += points;
+            currentUser.usedCodes.push(code);  // 記錄已使用的兌換碼
+            registeredUsers[currentUser.username] = currentUser;
+            localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers));
+            document.getElementById('message').innerText = `兌換成功！獲得 ${points} 點！`;
+        } else {
+            document.getElementById('message').innerText = "兌換碼無效！";
+        }
     }
 </script>
 
