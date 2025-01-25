@@ -54,7 +54,7 @@
 
 <div class="container">
     <h2 id="form-title">登錄</h2>
-    <form id="login-form">
+    <form id="login-form" onsubmit="handleLogin(event)">
         <label for="login-code">代碼:</label>
         <input type="text" id="login-code" required><br>
         <label for="login-password">密碼:</label>
@@ -65,7 +65,7 @@
 
     <div class="hidden" id="register-section">
         <h2>註冊</h2>
-        <form id="register-form">
+        <form id="register-form" onsubmit="handleRegister(event)">
             <label for="register-code">代碼:</label>
             <input type="text" id="register-code" required><br>
             <label for="register-password">密碼:</label>
@@ -78,68 +78,70 @@
         </form>
     </div>
 
-    <button id="toggle-btn">切換到註冊</button>
+    <button id="toggle-btn" onclick="toggleForms()">切換到註冊</button>
     
     <div class="hidden" id="forgot-password-section">
         <h2>忘記密碼</h2>
-        <form id="forgot-password-form">
+        <form id="forgot-password-form" onsubmit="handleForgotPassword(event)">
             <label for="forgot-code">代碼:</label>
             <input type="text" id="forgot-code" required><br>
             <button type="submit">重置密碼</button>
             <div class="message" id="forgot-message"></div>
         </form>
     </div>
-    <button id="forgot-password-btn">忘記密碼？</button>
+    <button id="forgot-password-btn" onclick="toggleForgotPassword()">忘記密碼？</button>
 
     <div class="hidden" id="user-dashboard">
         <h2>會員功能</h2>
-        <button id="check-points">查看點數</button>
+        <button id="check-points" onclick="checkPoints()">查看點數</button>
         <div class="message" id="points-message"></div>
         
-        <button id="sign-in">簽到</button>
+        <button id="sign-in" onclick="signIn()">簽到</button>
         <div class="message" id="sign-in-message"></div>
         
-        <button id="lottery">抽獎</button>
+        <button id="lottery" onclick="lottery()">抽獎</button>
         <div class="message" id="lottery-message"></div>
         
         <h3>兌換碼</h3>
         <input type="text" id="redeem-code" placeholder="輸入兌換碼">
-        <button id="submit-redeem-code">提交兌換碼</button>
+        <button id="submit-redeem-code" onclick="submitRedeemCode()">提交兌換碼</button>
         <div class="message" id="redeem-code-message"></div>
         
         <div class="hidden" id="admin-section">
             <h2>管理員功能</h2>
-            <button id="add-redeem-code">新增兌換碼</button>
-            <button id="view-members">查看會員</button>
-            <div class="message" id="admin-message"></div>
+            <form id="add-redeem-form" onsubmit="addRedeemCode(event)">
+                <label for="new-redeem-code">新增兌換碼:</label>
+                <input type="text" id="new-redeem-code" required>
+                <label for="redeem-points">獲得點數:</label>
+                <input type="number" id="redeem-points" required>
+                <label for="holiday">節慶:</label>
+                <input type="text" id="holiday" placeholder="例如: 聖誕節">
+                <button type="submit">新增兌換碼</button>
+                <div class="message" id="admin-message"></div>
+            </form>
         </div>
     </div>
 </div>
 
 <script>
-    const toggleBtn = document.getElementById('toggle-btn');
-    const loginForm = document.getElementById('login-form');
-    const registerSection = document.getElementById('register-section');
-    const forgotPasswordSection = document.getElementById('forgot-password-section');
-    const userDashboard = document.getElementById('user-dashboard');
-    const adminSection = document.getElementById('admin-section');
-    const formTitle = document.getElementById('form-title');
-    const loginMessage = document.getElementById('login-message');
-    const registerMessage = document.getElementById('register-message');
-    const forgotMessage = document.getElementById('forgot-message');
-    const pointsMessage = document.getElementById('points-message');
-    const signInMessage = document.getElementById('sign-in-message');
-    const lotteryMessage = document.getElementById('lottery-message');
-    const redeemCodeMessage = document.getElementById('redeem-code-message');
-    const adminMessage = document.getElementById('admin-message');
-
     let isAdmin = false; // 模擬管理員狀態
     let points = 100; // 模擬會員點數
     let hasSignedInToday = false; // 簽到狀態
     let hasLotteryEnteredToday = false; // 抽獎狀態
     let usedRedeemCodes = new Set(); // 存儲已使用的兌換碼
+    let redeemCodes = new Map(); // 存儲可用的兌換碼和對應的點數
+    let isLoggedIn = false; // 用戶登錄狀態
+    let isHoliday = false; // 是否為節慶
+    let registeredUsers = {}; // 存儲註冊用戶的代碼和密碼
 
-    toggleBtn.addEventListener('click', function() {
+    function toggleForms() {
+        const registerSection = document.getElementById('register-section');
+        const loginForm = document.getElementById('login-form');
+        const formTitle = document.getElementById('form-title');
+        const toggleBtn = document.getElementById('toggle-btn');
+        const loginMessage = document.getElementById('login-message');
+        const registerMessage = document.getElementById('register-message');
+
         if (registerSection.classList.contains('hidden')) {
             registerSection.classList.remove('hidden');
             loginForm.classList.add('hidden');
@@ -153,54 +155,68 @@
             toggleBtn.textContent = '切換到註冊';
             registerMessage.textContent = ''; // 清除註冊消息
         }
-    });
+    }
 
-    loginForm.addEventListener('submit', function(e) {
-        e.preventDefault();
+    function handleLogin(event) {
+        event.preventDefault();
         const code = document.getElementById('login-code').value;
         const password = document.getElementById('login-password').value;
+        const loginMessage = document.getElementById('login-message');
 
-        // 模擬登錄邏輯
-        if (code === "admin" && password === "admin") {
-            isAdmin = true;
-            alert('管理員登錄成功！');
-            showDashboard();
-        } else if (code === "user" && password === "password") {
+        // 檢查用戶是否存在並且密碼正確
+        if (registeredUsers[code] && registeredUsers[code] === password) {
+            isLoggedIn = true; // 設置為已登錄
             alert('登錄成功！');
             showDashboard();
         } else {
             loginMessage.textContent = '登錄失敗：代碼或密碼錯誤。';
         }
-    });
+    }
 
     function showDashboard() {
-        loginForm.classList.add('hidden');
-        registerSection.classList.add('hidden');
-        forgotPasswordSection.classList.add('hidden');
-        userDashboard.classList.remove('hidden');
+        document.getElementById('login-form').classList.add('hidden');
+        document.getElementById('register-section').classList.add('hidden');
+        document.getElementById('forgot-password-section').classList.add('hidden');
+        document.getElementById('user-dashboard').classList.remove('hidden');
 
         if (isAdmin) {
-            adminSection.classList.remove('hidden');
+            document.getElementById('admin-section').classList.remove('hidden');
         }
     }
 
-    registerSection.querySelector('form').addEventListener('submit', function(e) {
-        e.preventDefault();
+    function handleRegister(event) {
+        event.preventDefault();
         const code = document.getElementById('register-code').value;
         const password = document.getElementById('register-password').value;
         const confirmPassword = document.getElementById('register-confirm-password').value;
+        const registerMessage = document.getElementById('register-message');
 
         if (password !== confirmPassword) {
             registerMessage.textContent = '密碼不匹配。';
             return;
         }
 
-        // 模擬註冊邏輯
-        alert('註冊成功！');
-        registerMessage.textContent = ''; // 清除消息
-    });
+        // 註冊用戶
+        registeredUsers[code] = password;
 
-    document.getElementById('forgot-password-btn').addEventListener('click', function() {
+        // 檢查是否為管理員帳號
+        if (code.length === 10 && password.length === 10) {
+            isAdmin = true; // 設置為管理員
+            alert('註冊成功！您已成為管理員！');
+        } else {
+            alert('註冊成功！');
+        }
+
+        registerMessage.textContent = ''; // 清除消息
+    }
+
+    function toggleForgotPassword() {
+        const forgotPasswordSection = document.getElementById('forgot-password-section');
+        const loginForm = document.getElementById('login-form');
+        const registerSection = document.getElementById('register-section');
+        const formTitle = document.getElementById('form-title');
+        const toggleBtn = document.getElementById('toggle-btn');
+
         if (forgotPasswordSection.classList.contains('hidden')) {
             forgotPasswordSection.classList.remove('hidden');
             loginForm.classList.add('hidden');
@@ -208,33 +224,47 @@
             formTitle.textContent = '忘記密碼';
             toggleBtn.classList.add('hidden'); // 隱藏切換按鈕
         }
-    });
+    }
 
-    document.getElementById('forgot-password-form').addEventListener('submit', function(e) {
-        e.preventDefault();
+    function handleForgotPassword(event) {
+        event.preventDefault();
         const code = document.getElementById('forgot-code').value;
+        const forgotMessage = document.getElementById('forgot-message');
 
         // 模擬重置密碼邏輯
         alert(`重置密碼鏈接已發送到代碼 ${code}`);
         forgotMessage.textContent = ''; // 清除消息
-    });
+    }
 
-    // 會員功能
-    document.getElementById('check-points').addEventListener('click', function() {
-        pointsMessage.textContent = `您的點數：${points}`;
-    });
+    function checkPoints() {
+        document.getElementById('points-message').textContent = `您的點數：${points}`;
+    }
 
-    document.getElementById('sign-in').addEventListener('click', function() {
-        if (hasSignedInToday) {
-            signInMessage.textContent = '您今天已經簽到過了。';
+    function signIn() {
+        const signInMessage = document.getElementById('sign-in-message');
+        
+        // 確認今天是否為節慶
+        if (isHoliday) {
+            if (hasSignedInToday) {
+                signInMessage.textContent = '您今天已經簽到過了。';
+            } else {
+                signInMessage.textContent = '簽到成功！獲得 1000 點。';
+                points += 1000; // 簽到獲得 1000 點
+                hasSignedInToday = true; // 設置為已簽到
+            }
         } else {
-            signInMessage.textContent = '簽到成功！獲得 10 點。';
-            points += 10; // 簽到獲得點數
-            hasSignedInToday = true; // 設置為已簽到
+            if (hasSignedInToday) {
+                signInMessage.textContent = '您今天已經簽到過了。';
+            } else {
+                signInMessage.textContent = '簽到成功！獲得 10 點。';
+                points += 10; // 簽到獲得 10 點
+                hasSignedInToday = true; // 設置為已簽到
+            }
         }
-    });
+    }
 
-    document.getElementById('lottery').addEventListener('click', function() {
+    function lottery() {
+        const lotteryMessage = document.getElementById('lottery-message');
         if (hasLotteryEnteredToday) {
             lotteryMessage.textContent = '您今天已經參加過抽獎了。';
         } else {
@@ -242,30 +272,46 @@
             lotteryMessage.textContent = win ? '恭喜您中獎！' : '很遺憾，未中獎。';
             hasLotteryEnteredToday = true; // 設置為已參加抽獎
         }
-    });
+    }
 
-    document.getElementById('submit-redeem-code').addEventListener('click', function() {
+    function submitRedeemCode() {
         const code = document.getElementById('redeem-code').value;
+        const redeemCodeMessage = document.getElementById('redeem-code-message');
+
         if (usedRedeemCodes.has(code)) {
             redeemCodeMessage.textContent = '您已經使用過此兌換碼。';
-        } else if (code === "REDEEM123") {
-            points += 100; // 假設兌換碼獲得 100 點
+        } else if (redeemCodes.has(code)) {
+            const pointsToAdd = redeemCodes.get(code); // 獲取兌換碼對應的點數
+            points += pointsToAdd; // 增加點數
             usedRedeemCodes.add(code); // 記錄已使用的兌換碼
-            redeemCodeMessage.textContent = '兌換碼成功！獲得 100 點。';
+            redeemCodeMessage.textContent = `兌換碼成功！獲得 ${pointsToAdd} 點。`;
         } else {
             redeemCodeMessage.textContent = '無效的兌換碼。';
         }
-    });
+    }
 
-    document.getElementById('add-redeem-code').addEventListener('click', function() {
-        // 模擬新增兌換碼的邏輯
-        adminMessage.textContent = '新增兌換碼功能尚未實現。';
-    });
+    function addRedeemCode(event) {
+        event.preventDefault();
+        const newRedeemCode = document.getElementById('new-redeem-code').value;
+        const redeemPoints = parseInt(document.getElementById('redeem-points').value);
+        const holiday = document.getElementById('holiday').value;
+        const adminMessage = document.getElementById('admin-message');
 
-    document.getElementById('view-members').addEventListener('click', function() {
-        // 模擬查看會員的邏輯
-        adminMessage.textContent = '查看會員功能尚未實現。';
-    });
+        if (newRedeemCode && !isNaN(redeemPoints)) {
+            redeemCodes.set(newRedeemCode, redeemPoints); // 新增兌換碼及其對應的點數
+            adminMessage.textContent = `兌換碼 ${newRedeemCode} 已新增！獲得 ${redeemPoints} 點。${holiday ? ' 節慶: ' + holiday : ''}`;
+            document.getElementById('new-redeem-code').value = ''; // 清空輸入框
+            document.getElementById('redeem-points').value = ''; // 清空點數輸入框
+            document.getElementById('holiday').value = ''; // 清空節慶輸入框
+
+            // 檢查是否為節慶
+            if (holiday) {
+                isHoliday = true; // 設置為節慶
+            }
+        } else {
+            adminMessage.textContent = '請輸入有效的兌換碼和點數。';
+        }
+    }
 
     // 密碼強度檢查
     document.getElementById('register-password').addEventListener('input', function() {
@@ -285,30 +331,3 @@
 
 </body>
 </html>
-<!DOCTYPE html>
-<html lang="zh-Hant">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>按鈕事件示範</title>
-</head>
-<body>
-
-    <button id="myButton">點擊我</button>
-    <div id="message"></div>
-
-    <script>
-        // 確保 DOM 完全加載後再添加事件監聽器
-        document.addEventListener('DOMContentLoaded', function() {
-            const button = document.getElementById('myButton');
-            const messageDiv = document.getElementById('message');
-
-            button.addEventListener('click', function() {
-                messageDiv.textContent = '按鈕已被點擊！';
-            });
-        });
-    </script>
-
-</body>
-</html>
-
