@@ -128,16 +128,21 @@
             const password = document.getElementById('password').value.trim();
             const messageDiv = document.getElementById('customerMessage');
 
+            // 檢查管理員登錄
             if (username === adminUsername && password === adminPassword) {
                 toggleVisibility('loginContainer', false);
                 toggleVisibility('adminContainer', true);
                 messageDiv.innerHTML = '';
-            } else if (users.some(user => user.username === username && user.password === password)) {
-                toggleVisibility('loginContainer', false);
-                toggleVisibility('customerContainer', true);
-                messageDiv.innerHTML = '';
             } else {
-                messageDiv.innerHTML = "用戶名或密碼錯誤！";
+                // 檢查用戶登錄
+                const user = users.find(user => user.username === username && user.password === password);
+                if (user) {
+                    toggleVisibility('loginContainer', false);
+                    toggleVisibility('customerContainer', true);
+                    messageDiv.innerHTML = '';
+                } else {
+                    messageDiv.innerHTML = "用戶名或密碼錯誤！";
+                }
             }
         }
 
