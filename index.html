@@ -25,7 +25,8 @@
             color: #b30000; /* 深紅色 */
         }
         input[type="text"],
-        input[type="password"] {
+        input[type="password"],
+        input[type="number"] {
             width: 100%;
             padding: 10px;
             margin: 10px 0;
@@ -47,7 +48,7 @@
             background-color: #FFC300; /* 更深的金黃色 */
         }
         .hidden { display: none; }
-        #customerMessage {
+        #customerMessage, #registerMessage, #adminMessage {
             margin-top: 10px;
             color: #d9534f; /* 鮮紅色錯誤訊息 */
         }
@@ -59,21 +60,47 @@
         <input type="text" id="username" placeholder="用戶名">
         <input type="password" id="password" placeholder="密碼">
         <button onclick="login()">登錄</button>
+        <button onclick="toggleVisibility('registerContainer', true)">註冊</button>
         <div id="customerMessage"></div>
+    </div>
+
+    <div class="container hidden" id="registerContainer">
+        <h2>註冊</h2>
+        <input type="text" id="newUsername" placeholder="新用戶名">
+        <input type="password" id="newPassword" placeholder="新密碼">
+        <button onclick="register()">註冊</button>
+        <button onclick="toggleVisibility('registerContainer', false)">返回登錄</button>
+        <div id="registerMessage"></div>
     </div>
 
     <div class="container hidden" id="customerContainer">
         <h2>會員功能</h2>
         <button onclick="checkIn()">每日簽到</button>
         <button onclick="lottery()">抽獎</button>
+        <button onclick="redeemItem()">兌換物品</button>
+        <button onclick="viewPoints()">查看點數</button>
+        <button onclick="enterCode()">兌換碼</button>
         <div id="notificationList"></div>
+    </div>
+
+    <div class="container hidden" id="adminContainer">
+        <h2>管理員功能</h2>
+        <button onclick="addRedemptionCode()">增新兌換碼</button>
+        <button onclick="viewUsers()">查看會員</button>
+        <button onclick="addRedeemableItem()">增加可兌換物品</button>
+        <button onclick="deleteRedeemableItem()">刪除兌換物品</button>
+        <div id="adminMessage"></div>
     </div>
 
     <script>
         const adminUsername = "xyz1020411"; // 管理員用戶名
         const adminPassword = "xyz1020411"; // 管理員密碼
+        let users = []; // 儲存用戶的數組
         let lastCheckInDate = null;
         let lastLotteryDate = null;
+        let redemptionCodes = []; // 儲存兌換碼
+        let redeemableItems = []; // 儲存可兌換物品
+        let userPoints = {}; // 儲存用戶點數
 
         function login() {
             const username = document.getElementById('username').value.trim();
@@ -81,12 +108,35 @@
             const messageDiv = document.getElementById('customerMessage');
 
             if (username === adminUsername && password === adminPassword) {
-                // 登錄成功，顯示會員界面
+                toggleVisibility('loginContainer', false);
+                toggleVisibility('adminContainer', true);
+                messageDiv.innerHTML = '';
+            } else if (users.some(user => user.username === username && user.password === password)) {
                 toggleVisibility('loginContainer', false);
                 toggleVisibility('customerContainer', true);
                 messageDiv.innerHTML = '';
             } else {
                 messageDiv.innerHTML = "用戶名或密碼錯誤！";
+            }
+        }
+
+        function register() {
+            const newUsername = document.getElementById('newUsername').value.trim();
+            const newPassword = document.getElementById('newPassword').value.trim();
+            const registerMessageDiv = document.getElementById('registerMessage');
+
+            if (newUsername && newPassword) {
+                if (users.some(user => user.username === newUsername)) {
+                    registerMessageDiv.innerHTML = "用戶名已存在！";
+                } else {
+                    users.push({ username: newUsername, password: newPassword });
+                    userPoints[newUsername] = 0; // 新用戶初始點數為0
+                    registerMessageDiv.innerHTML = "註冊成功！";
+                    document.getElementById('newUsername').value = '';
+                    document.getElementById('newPassword').value = '';
+                }
+            } else {
+                registerMessageDiv.innerHTML = "請填寫所有欄位！";
             }
         }
 
@@ -96,7 +146,9 @@
                 alert("你今天已經簽到過了！");
             } else {
                 lastCheckInDate = today;
-                alert("簽到成功！");
+                const username = document.getElementById('username').value.trim();
+                userPoints[username] += 10; // 簽到獲得10點
+                alert("簽到成功！獲得10點！");
             }
         }
 
@@ -106,7 +158,86 @@
                 alert("你今天已經參加過抽獎了！");
             } else {
                 lastLotteryDate = today;
-                alert("抽獎成功！");
+                const prize = Math.floor(Math.random() * 100) + 1; // 隨機獲得1到100的獎品
+                alert(`抽獎成功！你獲得了 ${prize} 點！`);
+                const username = document.getElementById('username').value.trim();
+                userPoints[username] += prize; // 將獎品點數添加到用戶點數
+            }
+        }
+
+        function redeemItem() {
+            const username = document.getElementById('username').value.trim();
+            const item = prompt("請輸入要兌換的物品名稱：");
+            const redeemableItem = redeemableItems.find(i => i.name === item);
+            if (redeemableItem) {
+                const cost = redeemableItem.points; // 根據物品名稱獲取所需點數
+                if (userPoints[username] >= cost) {
+                    userPoints[username] -= cost;
+                    alert(`兌換成功！你兌換了 ${item}。`);
+                } else {
+                    alert("點數不足，無法兌換該物品。");
+                }
+            } else {
+                alert("該物品不存在或未上架。");
+            }
+        }
+
+        function viewPoints() {
+            const username = document.getElementById('username').value.trim();
+            alert(`你的點數為：${userPoints[username]} 點`);
+        }
+
+        function enterCode() {
+            const code = prompt("請輸入兌換碼：");
+            const redemptionCode = redemptionCodes.find(c => c.code === code);
+            if (redemptionCode) {
+                const username = document.getElementById('username').value.trim();
+                userPoints[username] += redemptionCode.points; // 使用兌換碼獲得指定點數
+                alert(`兌換碼使用成功！獲得 ${redemptionCode.points} 點！`);
+            } else {
+                alert("無效的兌換碼！");
+            }
+        }
+
+        function addRedemptionCode() {
+            const code = prompt("請輸入新的兌換碼：");
+            const points = parseInt(prompt("請輸入該兌換碼獲得的點數："), 10);
+            if (code && !isNaN(points)) {
+                redemptionCodes.push({ code: code, points: points });
+                alert(`兌換碼 ${code} 新增成功，獲得 ${points} 點！`);
+            } else {
+                alert("請輸入有效的兌換碼和點數！");
+            }
+        }
+
+        function viewUsers() {
+            const adminMessageDiv = document.getElementById('adminMessage');
+            if (users.length === 0) {
+                adminMessageDiv.innerHTML = "目前沒有註冊的用戶。";
+            } else {
+                adminMessageDiv.innerHTML = "用戶列表：<br>" + users.map(user => user.username).join(", ");
+            }
+        }
+
+        function addRedeemableItem() {
+            const item = prompt("請輸入可兌換物品名稱：");
+            const points = parseInt(prompt("請輸入兌換該物品所需的點數："), 10);
+            if (item && !isNaN(points)) {
+                redeemableItems.push({ name: item, points: points });
+                alert(`可兌換物品 ${item} 新增成功，所需點數 ${points} 點！`);
+            } else {
+                alert("請輸入有效的物品名稱和點數！");
+            }
+        }
+
+        function deleteRedeemableItem() {
+            const item = prompt("請輸入要刪除的可兌換物品名稱：");
+            const index = redeemableItems.findIndex(i => i.name === item);
+            if (index !== -1) {
+                redeemableItems.splice(index, 1);
+                alert(`可兌換物品 ${item} 刪除成功！`);
+            } else {
+                alert("該物品不存在！");
             }
         }
 
