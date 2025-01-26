@@ -131,6 +131,8 @@
             const password = document.getElementById('password').value.trim();
             const messageDiv = document.getElementById('customerMessage');
 
+            console.log(`嘗試登錄：用戶名=${username}, 密碼=${password}`); // 調試資訊
+
             // 檢查管理員登錄
             if (username === adminUsername && password === adminPassword) {
                 toggleVisibility('loginContainer', false);
