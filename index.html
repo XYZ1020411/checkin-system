@@ -5,14 +5,83 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>兌換系統</title>
     <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #ffcccc; /* 淡紅色背景 */
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            margin: 20px auto;
+            padding: 20px;
+            max-width: 400px;
+        }
+        h2 {
+            text-align: center;
+            color: #b30000; /* 深紅色 */
+        }
+        input[type="text"],
+        input[type="number"],
+        input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #FFD700; /* 金黃色按鈕 */
+            color: black;
+            border: none;
+            padding: 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            margin: 5px 0;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #FFC300; /* 更深的金黃色 */
+        }
         .hidden { display: none; }
-        .container { margin: 20px; }
+        #customerMessage {
+            margin-top: 10px;
+            color: #d9534f; /* 鮮紅色錯誤訊息 */
+        }
+        #notificationList {
+            list-style-type: none;
+            padding: 0;
+        }
+        #notificationList li {
+            background: #ffe6e6; /* 淡紅色通知 */
+            margin: 5px 0;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .redeem-item {
+            background-color: #ffe6e6; /* 淡紅色物品 */
+            border: 1px solid #b30000; /* 深紅色邊框 */
+            border-radius: 4px;
+            padding: 10px;
+            margin: 5px 0;
+            cursor: pointer;
+            text-align: center;
+            transition: background-color 0.3s;
+        }
+        .redeem-item:hover {
+            background-color: #ffcccc; /* 更淺的紅色 */
+        }
     </style>
 </head>
 <body>
     <div class="container" id="loginContainer">
         <h2>登錄</h2>
         <input type="text" id="username" placeholder="用戶名">
+        <input type="password" id="password" placeholder="密碼"> <!-- 新增密碼輸入框 -->
         <button onclick="login()">登錄</button>
     </div>
 
@@ -21,9 +90,8 @@
         <button onclick="checkIn()">每日簽到</button>
         <button onclick="viewPoints()">查看點數</button>
         <button onclick="lottery()">抽獎</button>
-        <input type="text" id="redeemCodeCustomer" placeholder="輸入兌換碼">
-        <button onclick="redeemCodeCustomer()">兌換兌換碼</button>
-        <button onclick="viewRedeemItems()">查看可兌換物品</button>
+        <h3>可兌換物品</h3>
+        <div id="redeemItemsContainer"></div>
         <p id="customerMessage"></p>
     </div>
 
@@ -43,39 +111,68 @@
 
     <script>
         let currentUser = null;
-        let redeemItems = {};
-        let registeredUsers = {};
-        let notifications = [];
+        let redeemItems = JSON.parse(localStorage.getItem('redeemItems')) || {
+            "商品A": 20,
+            "商品B": 50,
+            "商品C": 30
+        };
+        let registeredUsers = JSON.parse(localStorage.getItem('registeredUsers')) || {};
+        let notifications = JSON.parse(localStorage.getItem('notifications')) || [];
+
+        function toggleVisibility(containerId, isVisible) {
+            document.getElementById(containerId).classList.toggle('hidden', !isVisible);
+        }
 
         function login() {
-            const username = document.getElementById('username').value;
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim(); // 新增密碼輸入
+
             if (!username) {
                 alert("請輸入用戶名！");
                 return;
             }
 
-            // 模擬用戶登錄
-            currentUser = { username: username, points: 100, isAdmin: username === "admin" };
+            // 管理員帳號和密碼
+            const adminUsername = "xyz1020411";
+            const adminPassword = "xyz1020411";
+
+            // 驗證管理員帳號和密碼
+            if (username === adminUsername && password === adminPassword) {
+                currentUser = { username, points: 100, isAdmin: true };
+            } else {
+                currentUser = { username, points: 100, isAdmin: false };
+            }
+
             registeredUsers[username] = currentUser;
             localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers));
 
-            document.getElementById('loginContainer').classList.add('hidden');
-            if (currentUser.isAdmin) {
-                document.getElementById('adminContainer').classList.remove('hidden');
-            } else {
-                document.getElementById('customerContainer').classList.remove('hidden');
+            toggleVisibility('loginContainer', false);
+            toggleVisibility(currentUser.isAdmin ? 'adminContainer' : 'customerContainer', true);
+            displayRedeemItems();
+        }
+
+        function displayRedeemItems() {
+            const container = document.getElementById('redeemItemsContainer');
+            container.innerHTML = ""; // 清空容器
+            for (const [itemName, itemCost] of Object.entries(redeemItems)) {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'redeem-item';
+                itemDiv.textContent = `${itemName} - ${itemCost} 點數`;
+                itemDiv.onclick = () => redeemItem(itemName, itemCost);
+                container.appendChild(itemDiv);
             }
         }
 
-        function viewRedeemItems() {
-            const items = Object.keys(redeemItems);
-            if (items.length === 0) {
-                document.getElementById('customerMessage').innerText = "目前沒有可兌換的物品！";
+        function redeemItem(itemName, itemCost) {
+            if (currentUser.points < itemCost) {
+                document.getElementById('customerMessage').innerText = "點數不足，無法兌換！";
                 return;
             }
-
-            const itemList = items.join(", ");
-            document.getElementById('customerMessage').innerText = `可兌換物品: ${itemList}`;
+            currentUser.points -= itemCost;
+            document.getElementById('customerMessage').innerText = `成功兌換 ${itemName}！`;
+            notifyAdmin(currentUser.username, itemName);
+            localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers));
+            displayRedeemItems(); // 更新可兌換物品顯示
         }
 
         function addRedeemItem() {
@@ -92,35 +189,10 @@
                 return;
             }
 
-            redeemItems[itemName] = itemCost; // 儲存物品及其所需點數
+            redeemItems[itemName] = itemCost;
             localStorage.setItem('redeemItems', JSON.stringify(redeemItems));
             alert("新增可兌換物品成功！");
-        }
-
-        function redeemItem(itemName) {
-            if (!currentUser) {
-                document.getElementById('customerMessage').innerText = "請先登錄！";
-                return;
-            }
-
-            const itemCost = redeemItems[itemName];
-
-            if (itemCost) {
-                if (currentUser.points < itemCost) {
-                    document.getElementById('customerMessage').innerText = "點數不足，無法兌換！";
-                    return;
-                }
-
-                currentUser.points -= itemCost; // 扣除相應的點數
-                registeredUsers[currentUser.username] = currentUser;
-                localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers));
-
-                // 通知管理員
-                notifyAdmin(currentUser.username, itemName);
-                document.getElementById('customerMessage').innerText = `兌換成功！獲得 ${itemName}。`;
-            } else {
-                document.getElementById('customerMessage').innerText = "物品不存在！";
-            }
+            displayRedeemItems(); // 更新顯示
         }
 
         function notifyAdmin(customerName, itemName) {
@@ -140,14 +212,7 @@
             });
         }
 
-        // 模擬一些初始數據
-        redeemItems = {
-            "商品A": 20,
-            "商品B": 50,
-            "商品C": 30
-        };
-        localStorage.setItem('redeemItems', JSON.stringify(redeemItems));
-        notifications = JSON.parse(localStorage.getItem('notifications')) || [];
+        // 初始化數據
         updateNotificationList();
     </script>
 </body>
