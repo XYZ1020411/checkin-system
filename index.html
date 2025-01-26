@@ -171,11 +171,11 @@
 
         function checkIn() {
             const today = new Date().toDateString();
+            const username = document.getElementById('username').value.trim();
             if (lastCheckInDate === today) {
                 alert("你今天已經簽到過了！");
             } else {
                 lastCheckInDate = today;
-                const username = document.getElementById('username').value.trim();
                 userPoints[username] += 10; // 簽到獲得10點
                 saveData(); // 儲存資料
                 alert("簽到成功！獲得10點！");
@@ -184,12 +184,12 @@
 
         function lottery() {
             const today = new Date().toDateString();
+            const username = document.getElementById('username').value.trim();
             if (lastLotteryDate === today) {
                 alert("你今天已經參加過抽獎了！");
             } else {
                 lastLotteryDate = today;
                 const prize = Math.floor(Math.random() * 100) + 1; // 隨機獲得1到100的獎品
-                const username = document.getElementById('username').value.trim();
                 userPoints[username] += prize; // 將獎品點數添加到用戶點數
                 saveData(); // 儲存資料
                 alert(`抽獎成功！你獲得了 ${prize} 點！`);
