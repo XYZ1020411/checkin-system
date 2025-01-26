@@ -89,6 +89,7 @@
         <button onclick="viewUsers()">查看會員</button>
         <button onclick="addRedeemableItem()">增加可兌換物品</button>
         <button onclick="deleteRedeemableItem()">刪除兌換物品</button>
+        <button onclick="confirmRedemption()">確認兌換</button>
         <div id="adminMessage"></div>
     </div>
 
@@ -101,6 +102,7 @@
         let redemptionCodes = []; // 儲存兌換碼
         let redeemableItems = []; // 儲存可兌換物品
         let userPoints = {}; // 儲存用戶點數
+        let userRedemptionCodes = {}; // 儲存用戶兌換物品的代碼
 
         function login() {
             const username = document.getElementById('username').value.trim();
@@ -131,6 +133,7 @@
                 } else {
                     users.push({ username: newUsername, password: newPassword });
                     userPoints[newUsername] = 0; // 新用戶初始點數為0
+                    userRedemptionCodes[newUsername] = []; // 初始化用戶的兌換代碼數組
                     registerMessageDiv.innerHTML = "註冊成功！";
                     document.getElementById('newUsername').value = '';
                     document.getElementById('newPassword').value = '';
@@ -173,13 +176,19 @@
                 const cost = redeemableItem.points; // 根據物品名稱獲取所需點數
                 if (userPoints[username] >= cost) {
                     userPoints[username] -= cost;
-                    alert(`兌換成功！你兌換了 ${item}。`);
+                    const code = generateCode(); // 生成兌換代碼
+                    userRedemptionCodes[username].push(code); // 將代碼添加到用戶的兌換代碼中
+                    alert(`兌換成功！你兌換了 ${item}。你的兌換代碼是：${code}`);
                 } else {
                     alert("點數不足，無法兌換該物品。");
                 }
             } else {
                 alert("該物品不存在或未上架。");
             }
+        }
+
+        function generateCode() {
+            return Math.random().toString(36).substr(2, 8).toUpperCase(); // 生成隨機代碼
         }
 
         function viewPoints() {
@@ -238,6 +247,17 @@
                 alert(`可兌換物品 ${item} 刪除成功！`);
             } else {
                 alert("該物品不存在！");
+            }
+        }
+
+        function confirmRedemption() {
+            const code = prompt("請輸入會員提供的兌換代碼以確認使用：");
+            const username = prompt("請輸入會員的用戶名：");
+            if (userRedemptionCodes[username] && userRedemptionCodes[username].includes(code)) {
+                alert(`兌換代碼 ${code} 確認成功！`);
+                // 可在此處進行其他後續處理，例如更新庫存等
+            } else {
+                alert("無效的兌換代碼或用戶名！");
             }
         }
 
