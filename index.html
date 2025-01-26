@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>兌換系統</title>
+    <title>客戶簽到網頁</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -119,7 +119,7 @@
     <script>
         let currentUser = null;
         let redeemItems = JSON.parse(localStorage.getItem('redeemItems')) || {
-            "商品A": 20,
+            "pubg陪玩票": 20,
             "商品B": 50,
             "商品C": 30
         };
@@ -147,7 +147,7 @@
             if (username === adminUsername && password === adminPassword) {
                 currentUser = { username, points: 100, isAdmin: true };
             } else {
-                currentUser = { username, points: 100, isAdmin: false };
+                currentUser = { username, points: 100, isAdmin: false, lastCheckIn: null, lastLottery: null };
             }
 
             registeredUsers[username] = currentUser;
@@ -160,7 +160,16 @@
 
         function checkIn() {
             if (!currentUser) return;
-            currentUser.points += 10; // 每日簽到增加10點
+
+            const today = new Date().toDateString();
+
+            if (currentUser.lastCheckIn === today) {
+                alert("您今天已經簽到過了！");
+                return;
+            }
+
+            currentUser.points += 60; // 每日簽到增加10點
+            currentUser.lastCheckIn = today; // 更新最後簽到日期
             localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers));
             alert("簽到成功！獲得10點數。");
         }
@@ -172,8 +181,17 @@
 
         function lottery() {
             if (!currentUser) return;
+
+            const today = new Date().toDateString();
+
+            if (currentUser.lastLottery === today) {
+                alert("您今天已經抽獎過了！");
+                return;
+            }
+
             const prize = Math.floor(Math.random() * 100);
             currentUser.points += prize; // 隨機獲得點數
+            currentUser.lastLottery = today; // 更新最後抽獎日期
             localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers));
             alert(`恭喜！您獲得了 ${prize} 點數！`);
         }
@@ -207,8 +225,8 @@
             if (code) {
                 // 假設兌換碼是 "DISCOUNT10"
                 if (code === "DISCOUNT10") {
-                    currentUser.points += 10; // 兌換碼增加10點
-                    alert("兌換碼使用成功，獲得10點數！");
+                    currentUser.points += 60; // 兌換碼增加10點
+                    alert("兌換碼使用成功，獲得60點數！");
                     localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers));
                 } else {
                     alert("無效的兌換碼！");
