@@ -87,9 +87,8 @@
 
     <div class="container hidden" id="customerContainer">
         <h2>客戶功能</h2>
-        <button onclick="checkIn()">每日簽到</button>
-        <button onclick="viewPoints()">查看點數</button>
-        <button onclick="lottery()">抽獎</button>
+        <button id="checkInButton" onclick="checkIn()">每日簽到</button>
+        <button id="lotteryButton" onclick="lottery()">抽獎</button>
         <h3>可兌換物品</h3>
         <div id="redeemItemsContainer"></div>
         <input type="text" id="redeemCode" placeholder="輸入兌換碼">
@@ -125,6 +124,12 @@
         let registeredUsers = JSON.parse(localStorage.getItem('registeredUsers')) || {};
         let notifications = JSON.parse(localStorage.getItem('notifications')) || [];
 
+        // 獲取當前日期
+        function getCurrentDate() {
+            const date = new Date();
+            return date.toISOString().split('T')[0]; // YYYY-MM-DD 格式
+        }
+
         function toggleVisibility(containerId, isVisible) {
             document.getElementById(containerId).classList.toggle('hidden', !isVisible);
         }
@@ -139,7 +144,7 @@
             }
 
             // 管理員帳號和密碼
-            const adminUsername = "xyz1020411";
+            const adminUsername = "admin";
             const adminPassword = "xyz1020411";
 
             // 驗證管理員帳號和密碼
@@ -147,34 +152,76 @@
                 currentUser = { username, points: 100, isAdmin: true };
             } else {
                 currentUser = { username, points: 100, isAdmin: false };
+                // 初始化用戶的簽到和抽獎日期
+                if (!registeredUsers[username]) {
+                    registeredUsers[username] = {
+                        ...currentUser,
+                        lastCheckIn: null,
+                        lastLottery: null,
+                    };
+                } else {
+                    currentUser = registeredUsers[username];
+                }
             }
 
-            registeredUsers[username] = currentUser;
             localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers));
 
             toggleVisibility('loginContainer', false);
             toggleVisibility(currentUser.isAdmin ? 'adminContainer' : 'customerContainer', true);
             displayRedeemItems();
+            updateButtons(); // 更新按鈕狀態
+        }
+
+        function updateButtons() {
+            const today = getCurrentDate();
+            const userData = registeredUsers[currentUser.username];
+
+            // 每日簽到按鈕
+            if (userData.lastCheckIn === today) {
+                document.getElementById('checkInButton').disabled = true;
+                document.getElementById('checkInButton').innerText = "今日已簽到";
+            } else {
+                document.getElementById('checkInButton').disabled = false;
+                document.getElementById('checkInButton').innerText = "每日簽到";
+            }
+
+            // 抽獎按鈕
+            if (userData.lastLottery === today) {
+                document.getElementById('lotteryButton').disabled = true;
+                document.getElementById('lotteryButton').innerText = "今日已抽獎";
+            } else {
+                document.getElementById('lotteryButton').disabled = false;
+                document.getElementById('lotteryButton').innerText = "抽獎";
+            }
         }
 
         function checkIn() {
             if (!currentUser) return;
-            currentUser.points += 50; // 每日簽到增加10點
+            const today = getCurrentDate();
+            if (registeredUsers[currentUser.username].lastCheckIn === today) {
+                alert("您今天已經簽到過了！");
+                return;
+            }
+            currentUser.points += 10; // 每日簽到增加10點
+            registeredUsers[currentUser.username].lastCheckIn = today; // 更新簽到日期
             localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers));
-            alert("簽到成功！獲得50點數。");
-        }
-
-        function viewPoints() {
-            if (!currentUser) return;
-            alert(`當前點數：${currentUser.points}`);
+            alert("簽到成功！獲得10點數。");
+            updateButtons(); // 更新按鈕狀態
         }
 
         function lottery() {
             if (!currentUser) return;
+            const today = getCurrentDate();
+            if (registeredUsers[currentUser.username].lastLottery === today) {
+                alert("您今天已經抽過獎了！");
+                return;
+            }
             const prize = Math.floor(Math.random() * 100);
             currentUser.points += prize; // 隨機獲得點數
+            registeredUsers[currentUser.username].lastLottery = today; // 更新抽獎日期
             localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers));
             alert(`恭喜！您獲得了 ${prize} 點數！`);
+            updateButtons(); // 更新按鈕狀態
         }
 
         function displayRedeemItems() {
