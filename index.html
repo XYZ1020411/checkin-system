@@ -92,18 +92,24 @@
         <button onclick="lottery()">抽獎</button>
         <h3>可兌換物品</h3>
         <div id="redeemItemsContainer"></div>
+        <input type="text" id="redeemCode" placeholder="輸入兌換碼">
+        <button onclick="redeemWithCode()">兌換碼兌換</button>
         <p id="customerMessage"></p>
     </div>
 
     <div class="container hidden" id="adminContainer">
         <h2>管理員功能</h2>
         <button onclick="viewUsers()">查看所有用戶</button>
-        <input type="text" id="redeemCode" placeholder="輸入兌換碼">
+        <input type="text" id="newRedeemCode" placeholder="輸入新兌換碼">
         <input type="number" id="points" placeholder="增加點數" min="1">
         <button onclick="addRedeemCode()">新增兌換碼</button>
-        <input type="text" id="itemName" placeholder="新增可兌換物品">
+        <h3>新增可兌換物品</h3>
+        <input type="text" id="itemName" placeholder="新增可兌換物品名稱">
         <input type="number" id="itemCost" placeholder="物品所需點數" min="1">
         <button onclick="addRedeemItem()">新增可兌換物品</button>
+        <h3>刪除可兌換物品</h3>
+        <input type="text" id="deleteItemName" placeholder="輸入要刪除的物品名稱">
+        <button onclick="deleteRedeemItem()">刪除可兌換物品</button>
         <h3>通知列表</h3>
         <ul id="notificationList"></ul>
         <div id="userList" class="hidden"></div>
@@ -151,6 +157,26 @@
             displayRedeemItems();
         }
 
+        function checkIn() {
+            if (!currentUser) return;
+            currentUser.points += 50; // 每日簽到增加10點
+            localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers));
+            alert("簽到成功！獲得50點數。");
+        }
+
+        function viewPoints() {
+            if (!currentUser) return;
+            alert(`當前點數：${currentUser.points}`);
+        }
+
+        function lottery() {
+            if (!currentUser) return;
+            const prize = Math.floor(Math.random() * 100);
+            currentUser.points += prize; // 隨機獲得點數
+            localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers));
+            alert(`恭喜！您獲得了 ${prize} 點數！`);
+        }
+
         function displayRedeemItems() {
             const container = document.getElementById('redeemItemsContainer');
             container.innerHTML = ""; // 清空容器
@@ -175,6 +201,52 @@
             displayRedeemItems(); // 更新可兌換物品顯示
         }
 
+        function redeemWithCode() {
+            const code = document.getElementById('redeemCode').value.trim();
+            if (code) {
+                // 假設兌換碼是 "DISCOUNT10"
+                if (code === "DISCOUNT10") {
+                    currentUser.points += 10; // 兌換碼增加10點
+                    alert("兌換碼使用成功，獲得10點數！");
+                    localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers));
+                } else {
+                    alert("無效的兌換碼！");
+                }
+            }
+        }
+
+        function addRedeemCode() {
+            const code = document.getElementById('newRedeemCode').value.trim();
+            const pointsToAdd = parseInt(document.getElementById('points').value);
+            if (!currentUser.isAdmin) {
+                alert("您沒有權限訪問此功能！");
+                return;
+            }
+            if (!code || isNaN(pointsToAdd) || pointsToAdd <= 0) {
+                alert("請輸入有效的兌換碼和點數！");
+                return;
+            }
+            // 此處可擴展兌換碼的存儲邏輯
+            alert(`新增兌換碼 ${code}，可獲得 ${pointsToAdd} 點數！`);
+            document.getElementById('newRedeemCode').value = '';
+            document.getElementById('points').value = '';
+        }
+
+        function viewUsers() {
+            if (!currentUser.isAdmin) {
+                alert("您沒有權限訪問此功能！");
+                return;
+            }
+            const userList = document.getElementById('userList');
+            userList.innerHTML = ""; // 清空列表
+            for (const user in registeredUsers) {
+                const li = document.createElement('li');
+                li.textContent = `${user} - ${registeredUsers[user].points} 點數`;
+                userList.appendChild(li);
+            }
+            userList.classList.remove('hidden'); // 顯示用戶列表
+        }
+
         function addRedeemItem() {
             if (!currentUser || !currentUser.isAdmin) {
                 alert("您沒有權限訪問此功能！");
@@ -192,6 +264,25 @@
             redeemItems[itemName] = itemCost;
             localStorage.setItem('redeemItems', JSON.stringify(redeemItems));
             alert("新增可兌換物品成功！");
+            displayRedeemItems(); // 更新顯示
+        }
+
+        function deleteRedeemItem() {
+            if (!currentUser || !currentUser.isAdmin) {
+                alert("您沒有權限訪問此功能！");
+                return;
+            }
+
+            const itemName = document.getElementById('deleteItemName').value.trim();
+
+            if (!itemName || !(itemName in redeemItems)) {
+                alert("請輸入有效的物品名稱！");
+                return;
+            }
+
+            delete redeemItems[itemName];
+            localStorage.setItem('redeemItems', JSON.stringify(redeemItems));
+            alert(`物品 ${itemName} 已刪除！`);
             displayRedeemItems(); // 更新顯示
         }
 
