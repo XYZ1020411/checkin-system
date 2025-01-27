@@ -222,11 +222,18 @@
         function enterCode() {
             const code = prompt("請輸入兌換碼：");
             const redemptionCode = redemptionCodes.find(c => c.code === code);
+            const username = document.getElementById('username').value.trim();
+
             if (redemptionCode) {
-                const username = document.getElementById('username').value.trim();
-                userPoints[username] += redemptionCode.points;
-                saveData();
-                alert(`兌換碼使用成功！獲得 ${redemptionCode.points} 點！`);
+                // 檢查用戶是否已經使用過這個兌換碼
+                if (userRedemptionCodes[username].includes(code)) {
+                    alert("這個兌換碼您已經使用過了！");
+                } else {
+                    userPoints[username] += redemptionCode.points;
+                    userRedemptionCodes[username].push(code); // 記錄兌換碼
+                    saveData();
+                    alert(`兌換碼使用成功！獲得 ${redemptionCode.points} 點！`);
+                }
             } else {
                 alert("無效的兌換碼！");
             }
