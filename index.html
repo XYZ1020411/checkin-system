@@ -26,8 +26,7 @@
             color: #b30000; /* 深紅色 */
         }
         input[type="text"],
-        input[type="password"],
-        input[type="number"] {
+        input[type="password"] {
             width: 100%;
             padding: 10px;
             margin: 10px 0;
@@ -54,13 +53,6 @@
         #customerMessage, #registerMessage, #adminMessage {
             margin-top: 10px;
             color: #d9534f; /* 鮮紅色錯誤訊息 */
-        }
-        .notification {
-            margin-top: 10px;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            background-color: #f9f9f9;
         }
     </style>
 </head>
@@ -105,17 +97,16 @@
     </div>
 
     <script>
-        const adminUsername = "xyz1020411"; // 管理員用戶名
-        const adminPassword = "xyz1020411"; // 管理員密碼
-        let users = JSON.parse(localStorage.getItem('users')) || []; // 從 localStorage 獲取用戶資料
+        const adminCredentials = { username: "xyz1020411", password: "xyz1020411" };
+        let users = JSON.parse(localStorage.getItem('users')) || [];
         let lastCheckInDate = null;
         let lastLotteryDate = null;
-        let redemptionCodes = JSON.parse(localStorage.getItem('redemptionCodes')) || []; // 從 localStorage 獲取兌換碼
-        let redeemableItems = JSON.parse(localStorage.getItem('redeemableItems')) || []; // 從 localStorage 獲取可兌換物品
-        let userPoints = JSON.parse(localStorage.getItem('userPoints')) || {}; // 從 localStorage 獲取用戶點數
-        let userRedemptionCodes = JSON.parse(localStorage.getItem('userRedemptionCodes')) || {}; // 從 localStorage 獲取用戶兌換碼
-        let userInbox = JSON.parse(localStorage.getItem('userInbox')) || {}; // 從 localStorage 獲取用戶收件夾
-        let redemptionRequests = []; // 儲存兌換請求
+        let redemptionCodes = JSON.parse(localStorage.getItem('redemptionCodes')) || [];
+        let redeemableItems = JSON.parse(localStorage.getItem('redeemableItems')) || [];
+        let userPoints = JSON.parse(localStorage.getItem('userPoints')) || {};
+        let userRedemptionCodes = JSON.parse(localStorage.getItem('userRedemptionCodes')) || {};
+        let userInbox = JSON.parse(localStorage.getItem('userInbox')) || {};
+        let redemptionRequests = [];
 
         function saveData() {
             localStorage.setItem('users', JSON.stringify(users));
@@ -131,15 +122,11 @@
             const password = document.getElementById('password').value.trim();
             const messageDiv = document.getElementById('customerMessage');
 
-            console.log(`嘗試登錄：用戶名=${username}, 密碼=${password}`); // 調試資訊
-
-            // 檢查管理員登錄
-            if (username === adminUsername && password === adminPassword) {
+            if (username === adminCredentials.username && password === adminCredentials.password) {
                 toggleVisibility('loginContainer', false);
                 toggleVisibility('adminContainer', true);
                 messageDiv.innerHTML = '';
             } else {
-                // 檢查用戶登錄
                 const user = users.find(user => user.username === username && user.password === password);
                 if (user) {
                     toggleVisibility('loginContainer', false);
@@ -161,10 +148,10 @@
                     registerMessageDiv.innerHTML = "用戶名已存在！";
                 } else {
                     users.push({ username: newUsername, password: newPassword });
-                    userPoints[newUsername] = 0; // 新用戶初始點數為0
-                    userRedemptionCodes[newUsername] = []; // 初始化用戶的兌換代碼數組
-                    userInbox[newUsername] = []; // 初始化用戶的收件夾
-                    saveData(); // 儲存資料
+                    userPoints[newUsername] = 0;
+                    userRedemptionCodes[newUsername] = [];
+                    userInbox[newUsername] = [];
+                    saveData();
                     registerMessageDiv.innerHTML = "註冊成功！";
                     document.getElementById('newUsername').value = '';
                     document.getElementById('newPassword').value = '';
@@ -181,8 +168,8 @@
                 alert("你今天已經簽到過了！");
             } else {
                 lastCheckInDate = today;
-                userPoints[username] += 10; // 簽到獲得10點
-                saveData(); // 儲存資料
+                userPoints[username] += 10;
+                saveData();
                 alert("簽到成功！獲得10點！");
             }
         }
@@ -194,9 +181,9 @@
                 alert("你今天已經參加過抽獎了！");
             } else {
                 lastLotteryDate = today;
-                const prize = Math.floor(Math.random() * 100) + 1; // 隨機獲得1到100的獎品
-                userPoints[username] += prize; // 將獎品點數添加到用戶點數
-                saveData(); // 儲存資料
+                const prize = Math.floor(Math.random() * 100) + 1;
+                userPoints[username] += prize;
+                saveData();
                 alert(`抽獎成功！你獲得了 ${prize} 點！`);
             }
         }
@@ -206,14 +193,14 @@
             const item = prompt("請輸入要兌換的物品名稱：");
             const redeemableItem = redeemableItems.find(i => i.name === item);
             if (redeemableItem) {
-                const cost = redeemableItem.points; // 根據物品名稱獲取所需點數
+                const cost = redeemableItem.points;
                 if (userPoints[username] >= cost) {
                     userPoints[username] -= cost;
-                    const code = generateCode(); // 生成兌換代碼
-                    userRedemptionCodes[username].push(code); // 將代碼添加到用戶的兌換代碼中
-                    userInbox[username].push(`你兌換了 ${item}，兌換代碼是：${code}`); // 發送代碼到收件夾
-                    redemptionRequests.push({ username: username, item: item, code: code }); // 添加兌換請求
-                    saveData(); // 儲存資料
+                    const code = generateCode();
+                    userRedemptionCodes[username].push(code);
+                    userInbox[username].push(`你兌換了 ${item}，兌換代碼是：${code}`);
+                    redemptionRequests.push({ username, item, code });
+                    saveData();
                     alert(`兌換成功！你兌換了 ${item}。你的兌換代碼是：${code}`);
                 } else {
                     alert("點數不足，無法兌換該物品。");
@@ -224,7 +211,7 @@
         }
 
         function generateCode() {
-            return Math.random().toString(36).substr(2, 8).toUpperCase(); // 生成隨機代碼
+            return Math.random().toString(36).substr(2, 8).toUpperCase();
         }
 
         function viewPoints() {
@@ -237,8 +224,8 @@
             const redemptionCode = redemptionCodes.find(c => c.code === code);
             if (redemptionCode) {
                 const username = document.getElementById('username').value.trim();
-                userPoints[username] += redemptionCode.points; // 使用兌換碼獲得指定點數
-                saveData(); // 儲存資料
+                userPoints[username] += redemptionCode.points;
+                saveData();
                 alert(`兌換碼使用成功！獲得 ${redemptionCode.points} 點！`);
             } else {
                 alert("無效的兌換碼！");
@@ -259,8 +246,8 @@
             const code = prompt("請輸入新的兌換碼：");
             const points = parseInt(prompt("請輸入該兌換碼獲得的點數："), 10);
             if (code && !isNaN(points)) {
-                redemptionCodes.push({ code: code, points: points });
-                saveData(); // 儲存資料
+                redemptionCodes.push({ code, points });
+                saveData();
                 alert(`兌換碼 ${code} 新增成功，獲得 ${points} 點！`);
             } else {
                 alert("請輸入有效的兌換碼和點數！");
@@ -280,8 +267,8 @@
             const item = prompt("請輸入可兌換物品名稱：");
             const points = parseInt(prompt("請輸入兌換該物品所需的點數："), 10);
             if (item && !isNaN(points)) {
-                redeemableItems.push({ name: item, points: points });
-                saveData(); // 儲存資料
+                redeemableItems.push({ name: item, points });
+                saveData();
                 alert(`可兌換物品 ${item} 新增成功，所需點數 ${points} 點！`);
             } else {
                 alert("請輸入有效的物品名稱和點數！");
@@ -293,7 +280,7 @@
             const index = redeemableItems.findIndex(i => i.name === item);
             if (index !== -1) {
                 redeemableItems.splice(index, 1);
-                saveData(); // 儲存資料
+                saveData();
                 alert(`可兌換物品 ${item} 刪除成功！`);
             } else {
                 alert("該物品不存在！");
@@ -305,8 +292,6 @@
             const redemptionRequest = redemptionRequests.find(req => req.code === code);
             if (redemptionRequest) {
                 alert(`兌換代碼 ${code} 確認成功！`);
-                // 這裡可以進行其他後續處理，例如更新庫存等
-                // 確認後可以從請求中刪除該條目
                 redemptionRequests = redemptionRequests.filter(req => req.code !== code);
             } else {
                 alert("無效的兌換代碼！");
