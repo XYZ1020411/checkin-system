@@ -18,21 +18,20 @@
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
             margin: 20px auto;
             padding: 20px;
-            max-width: 90%; /* 調整最大寬度以適應手機 */
-            box-sizing: border-box; /* 包含內邊距和邊框 */
+            max-width: 400px;
         }
         h2 {
             text-align: center;
             color: #b30000; /* 深紅色 */
         }
         input[type="text"],
+        input[type="number"],
         input[type="password"] {
             width: 100%;
             padding: 10px;
             margin: 10px 0;
             border: 1px solid #ccc;
             border-radius: 4px;
-            box-sizing: border-box; /* 包含內邊距和邊框 */
         }
         button {
             background-color: #FFD700; /* 金黃色按鈕 */
@@ -44,270 +43,118 @@
             width: 100%;
             margin: 5px 0;
             transition: background-color 0.3s;
-            box-sizing: border-box; /* 包含內邊距和邊框 */
         }
         button:hover {
             background-color: #FFC300; /* 更深的金黃色 */
         }
         .hidden { display: none; }
-        #customerMessage, #registerMessage, #adminMessage {
+        #customerMessage {
             margin-top: 10px;
             color: #d9534f; /* 鮮紅色錯誤訊息 */
         }
+        #notificationList {
+            list-style-type: none;
+            padding: 0;
+        }
+        #notificationList li {
+            background: #ffe6e6; /* 淡紅色通知 */
+            margin: 5px 0;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .redeem-item {
+            background-color: #ffe6e6; /* 淡紅色物品 */
+            border: 1px solid #b30000; /* 深紅色邊框 */
+            border-radius: 4px;
+            padding: 10px;
+            margin: 5px 0;
+            cursor: pointer;
+            text-align: center;
+            transition: background-color 0.3s;
+        }
+        .redeem-item:hover {
+            background-color: #ffcccc; /* 更淺的紅色 */
+        }
     </style>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
+    <script>
+        // Firebase 配置
+        const firebaseConfig = {
+            apiKey: "uD1F3E0zkCgNvjBnz3Y7wfi1NqCUhVk8n1d1autpM-U",
+            authDomain: "mywe-a4e31.firebaseapp.com",
+            databaseURL: "https://mywe-a4e31-default-rtdb.asia-southeast1.firebasedatabase.app/",
+            projectId: "mywe-a4e31",
+            storageBucket: "mywe-a4e31.appspot.com",
+            messagingSenderId: "569456760608",  // 更新後的 Sender ID
+            appId: "569456760608"  // 更新後的 App ID
+        };
+
+        // 初始化 Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const database = firebase.database(app);
+
+        function login() {
+            const username = document.getElementById('username').value;
+            if (username) {
+                document.getElementById('loginContainer').classList.add('hidden');
+                document.getElementById('mainContainer').classList.remove('hidden');
+                document.getElementById('welcomeMessage').innerText = `歡迎，${username}！`;
+                loadNotifications();
+                loadRedeemItems();
+            } else {
+                alert('請輸入用戶名！');
+            }
+        }
+
+        function loadNotifications() {
+            const notificationList = document.getElementById('notificationList');
+            notificationList.innerHTML = '';
+            // 模擬通知
+            const notifications = ['簽到成功！', '獲得 10 積分！'];
+            notifications.forEach(notification => {
+                const li = document.createElement('li');
+                li.innerText = notification;
+                notificationList.appendChild(li);
+            });
+        }
+
+        function loadRedeemItems() {
+            const redeemList = document.getElementById('redeemList');
+            redeemList.innerHTML = '';
+            // 模擬兌換物品
+            const items = [
+                { name: '咖啡券', points: 20 },
+                { name: '電影票', points: 50 }
+            ];
+            items.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'redeem-item';
+                div.innerText = `${item.name} - ${item.points} 積分`;
+                div.onclick = () => redeemItem(item);
+                redeemList.appendChild(div);
+            });
+        }
+
+        function redeemItem(item) {
+            alert(`成功兌換 ${item.name}！`);
+        }
+    </script>
 </head>
 <body>
     <div class="container" id="loginContainer">
         <h2>登錄</h2>
-        <input type="text" id="username" placeholder="用戶名">
-        <input type="password" id="password" placeholder="密碼">
+        <input type="text" id="username" placeholder="請輸入用戶名" />
         <button onclick="login()">登錄</button>
-        <button onclick="toggleVisibility('registerContainer', true)">註冊</button>
-        <div id="customerMessage"></div>
+        <div id="customerMessage" class="hidden"></div>
     </div>
 
-    <div class="container hidden" id="registerContainer">
-        <h2>註冊</h2>
-        <input type="text" id="newUsername" placeholder="新用戶名">
-        <input type="password" id="newPassword" placeholder="新密碼">
-        <button onclick="register()">註冊</button>
-        <button onclick="toggleVisibility('registerContainer', false)">返回登錄</button>
-        <div id="registerMessage"></div>
+    <div class="container hidden" id="mainContainer">
+        <h2 id="welcomeMessage"></h2>
+        <h3>通知</h3>
+        <ul id="notificationList"></ul>
+        <h3>可兌換物品</h3>
+        <div id="redeemList"></div>
     </div>
-
-    <div class="container hidden" id="customerContainer">
-        <h2>會員功能</h2>
-        <button onclick="checkIn()">每日簽到</button>
-        <button onclick="lottery()">抽獎</button>
-        <button onclick="redeemItem()">兌換物品</button>
-        <button onclick="viewPoints()">查看點數</button>
-        <button onclick="enterCode()">兌換碼</button>
-        <button onclick="viewInbox()">查看收件夾</button>
-        <div id="notificationList"></div>
-    </div>
-
-    <div class="container hidden" id="adminContainer">
-        <h2>管理員功能</h2>
-        <button onclick="addRedemptionCode()">增新兌換碼</button>
-        <button onclick="viewUsers()">查看會員</button>
-        <button onclick="addRedeemableItem()">增加可兌換物品</button>
-        <button onclick="deleteRedeemableItem()">刪除兌換物品</button>
-        <button onclick="confirmRedemption()">確認兌換</button>
-        <div id="adminMessage"></div>
-    </div>
-
-    <script>
-        const adminCredentials = { username: "xyz1020411", password: "xyz1020411" };
-        let users = JSON.parse(localStorage.getItem('users')) || [];
-        let lastCheckInDate = null;
-        let lastLotteryDate = null;
-        let redemptionCodes = JSON.parse(localStorage.getItem('redemptionCodes')) || [];
-        let redeemableItems = JSON.parse(localStorage.getItem('redeemableItems')) || [];
-        let userPoints = JSON.parse(localStorage.getItem('userPoints')) || {};
-        let userRedemptionCodes = JSON.parse(localStorage.getItem('userRedemptionCodes')) || {};
-        let userInbox = JSON.parse(localStorage.getItem('userInbox')) || {};
-        let redemptionRequests = [];
-
-        function saveData() {
-            localStorage.setItem('users', JSON.stringify(users));
-            localStorage.setItem('redemptionCodes', JSON.stringify(redemptionCodes));
-            localStorage.setItem('redeemableItems', JSON.stringify(redeemableItems));
-            localStorage.setItem('userPoints', JSON.stringify(userPoints));
-            localStorage.setItem('userRedemptionCodes', JSON.stringify(userRedemptionCodes));
-            localStorage.setItem('userInbox', JSON.stringify(userInbox));
-        }
-
-        function login() {
-            const username = document.getElementById('username').value.trim();
-            const password = document.getElementById('password').value.trim();
-            const messageDiv = document.getElementById('customerMessage');
-
-            if (username === adminCredentials.username && password === adminCredentials.password) {
-                toggleVisibility('loginContainer', false);
-                toggleVisibility('adminContainer', true);
-                messageDiv.innerHTML = '';
-            } else {
-                const user = users.find(user => user.username === username && user.password === password);
-                if (user) {
-                    toggleVisibility('loginContainer', false);
-                    toggleVisibility('customerContainer', true);
-                    messageDiv.innerHTML = '';
-                } else {
-                    messageDiv.innerHTML = "用戶名或密碼錯誤！";
-                }
-            }
-        }
-
-        function register() {
-            const newUsername = document.getElementById('newUsername').value.trim();
-            const newPassword = document.getElementById('newPassword').value.trim();
-            const registerMessageDiv = document.getElementById('registerMessage');
-
-            if (newUsername && newPassword) {
-                if (users.some(user => user.username === newUsername)) {
-                    registerMessageDiv.innerHTML = "用戶名已存在！";
-                } else {
-                    users.push({ username: newUsername, password: newPassword });
-                    userPoints[newUsername] = 0;
-                    userRedemptionCodes[newUsername] = [];
-                    userInbox[newUsername] = [];
-                    saveData();
-                    registerMessageDiv.innerHTML = "註冊成功！";
-                    document.getElementById('newUsername').value = '';
-                    document.getElementById('newPassword').value = '';
-                }
-            } else {
-                registerMessageDiv.innerHTML = "請填寫所有欄位！";
-            }
-        }
-
-        function checkIn() {
-            const today = new Date().toDateString();
-            const username = document.getElementById('username').value.trim();
-            if (lastCheckInDate === today) {
-                alert("你今天已經簽到過了！");
-            } else {
-                lastCheckInDate = today;
-                userPoints[username] += 50;
-                saveData();
-                alert("簽到成功！獲得50點！");
-            }
-        }
-
-        function lottery() {
-            const today = new Date().toDateString();
-            const username = document.getElementById('username').value.trim();
-            if (lastLotteryDate === today) {
-                alert("你今天已經參加過抽獎了！");
-            } else {
-                lastLotteryDate = today;
-                const prize = Math.floor(Math.random() * 100) + 1;
-                userPoints[username] += prize;
-                saveData();
-                alert(`抽獎成功！你獲得了 ${prize} 點！`);
-            }
-        }
-
-        function redeemItem() {
-            const username = document.getElementById('username').value.trim();
-            const item = prompt("請輸入要兌換的物品名稱：");
-            const redeemableItem = redeemableItems.find(i => i.name === item);
-            if (redeemableItem) {
-                const cost = redeemableItem.points;
-                if (userPoints[username] >= cost) {
-                    userPoints[username] -= cost;
-                    const code = generateCode();
-                    userRedemptionCodes[username].push(code);
-                    userInbox[username].push(`你兌換了 ${item}，兌換代碼是：${code}`);
-                    redemptionRequests.push({ username, item, code });
-                    saveData();
-                    alert(`兌換成功！你兌換了 ${item}。你的兌換代碼是：${code}`);
-                } else {
-                    alert("點數不足，無法兌換該物品。");
-                }
-            } else {
-                alert("該物品不存在或未上架。");
-            }
-        }
-
-        function generateCode() {
-            return Math.random().toString(36).substr(2, 8).toUpperCase();
-        }
-
-        function viewPoints() {
-            const username = document.getElementById('username').value.trim();
-            alert(`你的點數為：${userPoints[username]} 點`);
-        }
-
-        function enterCode() {
-            const code = prompt("請輸入兌換碼：");
-            const redemptionCode = redemptionCodes.find(c => c.code === code);
-            const username = document.getElementById('username').value.trim();
-
-            if (redemptionCode) {
-                // 檢查用戶是否已經使用過這個兌換碼
-                if (userRedemptionCodes[username].includes(code)) {
-                    alert("這個兌換碼您已經使用過了！");
-                } else {
-                    userPoints[username] += redemptionCode.points;
-                    userRedemptionCodes[username].push(code); // 記錄兌換碼
-                    saveData();
-                    alert(`兌換碼使用成功！獲得 ${redemptionCode.points} 點！`);
-                }
-            } else {
-                alert("無效的兌換碼！");
-            }
-        }
-
-        function viewInbox() {
-            const username = document.getElementById('username').value.trim();
-            const inbox = userInbox[username];
-            if (inbox.length === 0) {
-                alert("你的收件夾是空的。");
-            } else {
-                alert("收件夾內容：\n" + inbox.join("\n"));
-            }
-        }
-
-        function addRedemptionCode() {
-            const code = prompt("請輸入新的兌換碼：");
-            const points = parseInt(prompt("請輸入該兌換碼獲得的點數："), 10);
-            if (code && !isNaN(points)) {
-                redemptionCodes.push({ code, points });
-                saveData();
-                alert(`兌換碼 ${code} 新增成功，獲得 ${points} 點！`);
-            } else {
-                alert("請輸入有效的兌換碼和點數！");
-            }
-        }
-
-        function viewUsers() {
-            const adminMessageDiv = document.getElementById('adminMessage');
-            if (users.length === 0) {
-                adminMessageDiv.innerHTML = "目前沒有註冊的用戶。";
-            } else {
-                adminMessageDiv.innerHTML = "用戶列表：<br>" + users.map(user => user.username).join(", ");
-            }
-        }
-
-        function addRedeemableItem() {
-            const item = prompt("請輸入可兌換物品名稱：");
-            const points = parseInt(prompt("請輸入兌換該物品所需的點數："), 10);
-            if (item && !isNaN(points)) {
-                redeemableItems.push({ name: item, points });
-                saveData();
-                alert(`可兌換物品 ${item} 新增成功，所需點數 ${points} 點！`);
-            } else {
-                alert("請輸入有效的物品名稱和點數！");
-            }
-        }
-
-        function deleteRedeemableItem() {
-            const item = prompt("請輸入要刪除的可兌換物品名稱：");
-            const index = redeemableItems.findIndex(i => i.name === item);
-            if (index !== -1) {
-                redeemableItems.splice(index, 1);
-                saveData();
-                alert(`可兌換物品 ${item} 刪除成功！`);
-            } else {
-                alert("該物品不存在！");
-            }
-        }
-
-        function confirmRedemption() {
-            const code = prompt("請輸入會員提供的兌換代碼以確認使用：");
-            const redemptionRequest = redemptionRequests.find(req => req.code === code);
-            if (redemptionRequest) {
-                alert(`兌換代碼 ${code} 確認成功！`);
-                redemptionRequests = redemptionRequests.filter(req => req.code !== code);
-            } else {
-                alert("無效的兌換代碼！");
-            }
-        }
-
-        function toggleVisibility(id, isVisible) {
-            document.getElementById(id).classList.toggle('hidden', !isVisible);
-        }
-    </script>
 </body>
 </html>
