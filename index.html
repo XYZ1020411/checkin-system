@@ -89,10 +89,13 @@
         <h2>客戶功能</h2>
         <button id="checkInButton" onclick="checkIn()">每日簽到</button>
         <button id="lotteryButton" onclick="lottery()">抽獎</button>
+        <button id="viewPointsButton" onclick="viewPoints()">查看點數</button>
         <h3>可兌換物品</h3>
         <div id="redeemItemsContainer"></div>
         <input type="text" id="redeemCode" placeholder="輸入兌換碼">
         <button onclick="redeemWithCode()">兌換碼兌換</button>
+        <h3>收件夾</h3>
+        <ul id="inboxList"></ul>
         <p id="customerMessage"></p>
     </div>
 
@@ -109,6 +112,9 @@
         <h3>刪除可兌換物品</h3>
         <input type="text" id="deleteItemName" placeholder="輸入要刪除的物品名稱">
         <button onclick="deleteRedeemItem()">刪除可兌換物品</button>
+        <h3>物品使用碼</h3>
+        <input type="text" id="itemUsageCode" placeholder="輸入物品使用碼">
+        <button onclick="useItemCode()">使用碼</button>
         <h3>通知列表</h3>
         <ul id="notificationList"></ul>
         <div id="userList" class="hidden"></div>
@@ -123,6 +129,7 @@
         };
         let registeredUsers = JSON.parse(localStorage.getItem('registeredUsers')) || {};
         let notifications = JSON.parse(localStorage.getItem('notifications')) || [];
+        let inbox = JSON.parse(localStorage.getItem('inbox')) || {};
 
         // 獲取當前日期
         function getCurrentDate() {
@@ -144,7 +151,7 @@
             }
 
             // 管理員帳號和密碼
-            const adminUsername = "xyz1020411";
+            const adminUsername = "admin";
             const adminPassword = "xyz1020411";
 
             // 驗證管理員帳號和密碼
@@ -170,6 +177,24 @@
             toggleVisibility(currentUser.isAdmin ? 'adminContainer' : 'customerContainer', true);
             displayRedeemItems();
             updateButtons(); // 更新按鈕狀態
+            updateInbox(); // 更新收件夾
+        }
+
+        function viewPoints() {
+            alert(`您的當前點數: ${currentUser.points}`);
+        }
+
+        function updateInbox() {
+            const inboxList = document.getElementById('inboxList');
+            inboxList.innerHTML = ""; // 清空收件夾
+            if (inbox[currentUser.username]) {
+                inbox[currentUser.username].forEach(message => {
+                    const li = document.createElement('li');
+                    li.textContent = message;
+                    inboxList.appendChild(li);
+                });
+            }
+            localStorage.setItem('inbox', JSON.stringify(inbox));
         }
 
         function updateButtons() {
@@ -242,10 +267,25 @@
                 return;
             }
             currentUser.points -= itemCost;
-            document.getElementById('customerMessage').innerText = `成功兌換 ${itemName}！`;
-            notifyAdmin(currentUser.username, itemName);
+            const usageCode = generateUsageCode(); // 生成使用碼
+            document.getElementById('customerMessage').innerText = `成功兌換 ${itemName}！您的使用碼是: ${usageCode}`;
+            notifyAdmin(currentUser.username, itemName, usageCode);
+            addToInbox(currentUser.username, `您已成功兌換 ${itemName}，使用碼是 ${usageCode}，請聯絡管理員使用。`);
             localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers));
             displayRedeemItems(); // 更新可兌換物品顯示
+            updateInbox(); // 更新收件夾
+        }
+
+        function generateUsageCode() {
+            return Math.random().toString(36).substring(2, 10).toUpperCase(); // 生成隨機使用碼
+        }
+
+        function addToInbox(username, message) {
+            if (!inbox[username]) {
+                inbox[username] = [];
+            }
+            inbox[username].push(message);
+            localStorage.setItem('inbox', JSON.stringify(inbox));
         }
 
         function redeemWithCode() {
@@ -333,8 +373,18 @@
             displayRedeemItems(); // 更新顯示
         }
 
-        function notifyAdmin(customerName, itemName) {
-            const notification = `${customerName} 兌換了 ${itemName}`;
+        function useItemCode() {
+            const code = document.getElementById('itemUsageCode').value.trim();
+            if (!code) {
+                alert("請輸入有效的使用碼！");
+                return;
+            }
+            // 在這裡可以添加使用碼的邏輯
+            alert(`使用碼 ${code} 已成功使用！`);
+        }
+
+        function notifyAdmin(customerName, itemName, usageCode) {
+            const notification = `${customerName} 兌換了 ${itemName}，使用碼: ${usageCode}`;
             notifications.push(notification);
             localStorage.setItem('notifications', JSON.stringify(notifications));
             updateNotificationList();
@@ -352,6 +402,7 @@
 
         // 初始化數據
         updateNotificationList();
+        updateInbox();
     </script>
 </body>
 </html>
