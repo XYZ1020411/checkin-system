@@ -83,6 +83,15 @@
         <input type="text" id="username" placeholder="用戶名">
         <input type="password" id="password" placeholder="密碼"> <!-- 新增密碼輸入框 -->
         <button onclick="login()">登錄</button>
+        <button onclick="toggleVisibility('registerContainer', true)">註冊</button>
+    </div>
+
+    <div class="container hidden" id="registerContainer">
+        <h2>註冊</h2>
+        <input type="text" id="newUsername" placeholder="用戶名">
+        <input type="password" id="newPassword" placeholder="密碼">
+        <button onclick="register()">註冊</button>
+        <button onclick="toggleVisibility('registerContainer', false)">返回登錄</button>
     </div>
 
     <div class="container hidden" id="customerContainer">
@@ -145,29 +154,24 @@
             const username = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value.trim(); // 新增密碼輸入
 
-            if (!username) {
-                alert("請輸入用戶名！");
+            if (!username || !password) {
+                alert("請輸入用戶名和密碼！");
                 return;
             }
 
             // 管理員帳號和密碼
-            const adminUsername = "xyz1020411";
+            const adminUsername = "admin";
             const adminPassword = "xyz1020411";
 
             // 驗證管理員帳號和密碼
             if (username === adminUsername && password === adminPassword) {
                 currentUser = { username, points: 100, isAdmin: true };
             } else {
-                currentUser = { username, points: 100, isAdmin: false };
-                // 初始化用戶的簽到和抽獎日期
-                if (!registeredUsers[username]) {
-                    registeredUsers[username] = {
-                        ...currentUser,
-                        lastCheckIn: null,
-                        lastLottery: null,
-                    };
+                if (registeredUsers[username] && registeredUsers[username].password === password) {
+                    currentUser = { username, ...registeredUsers[username] };
                 } else {
-                    currentUser = registeredUsers[username];
+                    alert("用戶名或密碼錯誤！");
+                    return;
                 }
             }
 
@@ -178,6 +182,26 @@
             displayRedeemItems();
             updateButtons(); // 更新按鈕狀態
             updateInbox(); // 更新收件夾
+        }
+
+        function register() {
+            const username = document.getElementById('newUsername').value.trim();
+            const password = document.getElementById('newPassword').value.trim();
+
+            if (!username || !password) {
+                alert("請輸入用戶名和密碼！");
+                return;
+            }
+
+            if (registeredUsers[username]) {
+                alert("用戶名已存在，請選擇其他用戶名！");
+                return;
+            }
+
+            registeredUsers[username] = { password, points: 0, lastCheckIn: null, lastLottery: null };
+            localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers));
+            alert("註冊成功！您現在可以登錄。");
+            toggleVisibility('registerContainer', false);
         }
 
         function viewPoints() {
@@ -396,13 +420,4 @@
             notifications.forEach(notification => {
                 const li = document.createElement('li');
                 li.textContent = notification;
-                notificationList.appendChild(li);
-            });
-        }
-
-        // 初始化數據
-        updateNotificationList();
-        updateInbox();
-    </script>
-</body>
-</html>
+                notificationList.appendChild
