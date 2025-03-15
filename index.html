@@ -45,9 +45,10 @@
         <button onclick="checkout()">結帳</button>
         <h3>刮刮樂</h3>
         <div id="scratchCard" onclick="scratchCard(event)"><div class="scratch-layer"></div><div id="scratchResult"></div></div>
-        <h3>客服聯繫</h3>
+        <h3>AI 客服</h3>
         <textarea id="customerMessageInput" placeholder="請輸入您的訊息..."></textarea>
         <button onclick="sendMessage()">發送訊息</button>
+        <p id="customerResponse"></p>
         <h3>電子郵件</h3>
         <input type="text" id="friendUsername" placeholder="請輸入朋友的帳號">
         <textarea id="customerEmailInput" placeholder="請輸入電子郵件內容..."></textarea>
@@ -80,95 +81,52 @@
         <button onclick="sendAdminEmail()">發送電子郵件</button>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/redis@4.6.6/dist/redis.min.js"></script>
     <script>
-        const redisUrl = 'redis://default:lFQVdARopo6JS7MHLETCdDKLsV4LLqwW@redis-13486.c91.us-east-1-3.ec2.redns.redis-cloud.com:13486';
         let currentUser = null;
+        let redeemItems = { "商品A": { cost: 20, used: false }, "商品B": { cost: 50, used: false }, "商品C": { cost: 30, used: false } };
         let cart = [];
-        let redeemItems = {};
-        let messages = [];
-        let emails = [];
-        let registeredUsers = {};
-
-        async function connectRedis() {
-            const client = redis.createClient({ url: redisUrl });
-            await client.connect();
-            return client;
-        }
-
-        async function loadData() {
-            const client = await connectRedis();
-
-            // 載入用戶資料
-            const users = await client.hGetAll('registeredUsers');
-            for (const [username, data] of Object.entries(users)) {
-                registeredUsers[username] = JSON.parse(data);
-            }
-
-            // 載入可兌換物品
-            const items = await client.hGetAll('redeemItems');
-            for (const [itemName, data] of Object.entries(items)) {
-                redeemItems[itemName] = JSON.parse(data);
-            }
-
-            // 載入訊息
-            const messageData = await client.lRange('messages', 0, -1);
-            messages = messageData.map(msg => JSON.parse(msg));
-
-            // 載入電子郵件
-            const emailData = await client.lRange('emails', 0, -1);
-            emails = emailData.map(email => JSON.parse(email));
-
-            await client.quit();
-        }
+        let registeredUsers = JSON.parse(localStorage.getItem('registeredUsers')) || {};
+        let messages = JSON.parse(localStorage.getItem('messages')) || [];
+        let emails = JSON.parse(localStorage.getItem('emails')) || []; // 儲存電子郵件
 
         function toggleVisibility(containerId, isVisible) {
             document.getElementById(containerId).classList.toggle('hidden', !isVisible);
         }
 
-        async function login() {
+        function login() {
             const username = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value.trim();
             if (!username || !password) return alert("請輸入用戶名和密碼！");
-            if (registeredUsers[username] && registeredUsers[username].password === password) {
+            if (username === "xyz1020411" && password === "xyz1020411") {
+                currentUser = { username, points: 100, isAdmin: true };
+            } else if (registeredUsers[username] && registeredUsers[username].password === password) {
                 currentUser = { username, ...registeredUsers[username] };
-                toggleVisibility('loginContainer', false);
-                toggleVisibility(currentUser.isAdmin ? 'adminContainer' : 'customerContainer', true);
-                displayRedeemItems();
             } else {
-                alert("用戶名或密碼錯誤！");
+                return alert("用戶名或密碼錯誤！");
             }
+            toggleVisibility('loginContainer', false);
+            toggleVisibility(currentUser.isAdmin ? 'adminContainer' : 'customerContainer', true);
+            displayRedeemItems();
         }
 
-        async function register() {
+        function register() {
             const username = document.getElementById('newUsername').value.trim();
             const password = document.getElementById('newPassword').value.trim();
             if (!username || !password) return alert("請輸入用戶名和密碼！");
             if (registeredUsers[username]) return alert("用戶名已存在！");
             const email = username + "@example.com"; // 根據用戶名生成電子郵件
-            let points = 0;
-
-            // 如果註冊帳號為001，則給予80000點數
-            if (username === "001") {
-                points = 80000;
-            }
-
-            registeredUsers[username] = { password, email, points };
-            const client = await connectRedis();
-            await client.hSet('registeredUsers', username, JSON.stringify(registeredUsers[username]));
-            await client.quit();
+            registeredUsers[username] = { password, email, points: 0 };
+            localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers));
             alert("註冊成功！");
             toggleVisibility('registerContainer', false);
         }
 
-        async function checkIn() {
+        function checkIn() {
             const today = new Date().toDateString();
             if (currentUser.lastCheckIn === today) return alert("您今天已經簽到過了！");
             currentUser.points += 100;
             currentUser.lastCheckIn = today;
-            const client = await connectRedis();
-            await client.hSet('registeredUsers', currentUser.username, JSON.stringify(currentUser));
-            await client.quit();
+            localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers));
             alert("簽到成功！您獲得了100點數！");
         }
 
@@ -205,7 +163,7 @@
             });
         }
 
-        async function checkout() {
+        function checkout() {
             if (cart.length === 0) return alert("購物車是空的！");
             let totalCost = cart.reduce((sum, item) => sum + item.cost, 0);
             if (currentUser.points < totalCost) return alert("點數不足，無法結帳！");
@@ -214,9 +172,7 @@
                 redeemItems[item.name].used = true;
             });
             alert("結帳成功！");
-            const client = await connectRedis();
-            await client.hSet('registeredUsers', currentUser.username, JSON.stringify(currentUser));
-            await client.quit();
+            localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers));
             cart = [];
             displayCart();
             displayRedeemItems();
@@ -232,30 +188,27 @@
             currentUser.points += pointsWon; // 增加點數
             document.getElementById('scratchResult').innerText = `恭喜！您贏得了 ${pointsWon} 點數！`;
             currentUser.scratchUsed = true; // 標記為已使用
-            const client = await connectRedis();
-            await client.hSet('registeredUsers', currentUser.username, JSON.stringify(currentUser));
-            await client.quit();
+            localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers));
         }
 
         async function sendMessage() {
             const messageContent = document.getElementById('customerMessageInput').value.trim();
             if (!messageContent) return alert("請輸入訊息！");
-            messages.push({ id: messages.length + 1, from: currentUser.username, content: messageContent });
-            const client = await connectRedis();
-            await client.rPush('messages', JSON.stringify({ id: messages.length, from: currentUser.username, content: messageContent }));
-            await client.quit();
+            
+            // 將訊息發送到 AI 客服 API
+            const response = await fetch('https://your-ai-api-endpoint.com/send-message', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ from: currentUser.username, content: messageContent })
+            });
+
+            const data = await response.json();
             document.getElementById('customerMessageInput').value = "";
-
-            // 自動回覆訊息
-            const autoReply = `感謝您的聯繫，我們會盡快回覆您！`;
-            messages.push({ id: messages.length + 1, from: "系統", content: autoReply });
-            await client.rPush('messages', JSON.stringify({ id: messages.length, from: "系統", content: autoReply }));
-            await client.quit();
-
+            document.getElementById('customerResponse').innerText = `AI 回覆: ${data.reply}`;
             alert("訊息已發送給管理員！");
         }
 
-        async function sendEmail() {
+        function sendEmail() {
             const emailContent = document.getElementById('customerEmailInput').value.trim();
             const friendUsername = document.getElementById('friendUsername').value.trim();
             if (!emailContent) return alert("請輸入電子郵件內容！");
@@ -265,45 +218,38 @@
             if (!friend) return alert("朋友的帳號不存在！");
 
             emails.push({ to: friend.email, from: currentUser.username, content: emailContent });
-            const client = await connectRedis();
-            await client.rPush('emails', JSON.stringify({ to: friend.email, from: currentUser.username, content: emailContent }));
-            await client.quit();
+            localStorage.setItem('emails', JSON.stringify(emails));
             document.getElementById('customerEmailInput').value = "";
             document.getElementById('friendUsername').value = ""; // 清空朋友帳號輸入框
             alert(`電子郵件已發送給 ${friendUsername}！`);
         }
 
-        async function sendAdminEmail() {
+        function sendAdminEmail() {
             const emailContent = document.getElementById('adminEmailInput').value.trim();
             if (!emailContent) return alert("請輸入電子郵件內容！");
             const adminEmail = "admin@example.com"; // 管理員電子郵件
             emails.push({ to: adminEmail, from: currentUser.username, content: emailContent });
-            const client = await connectRedis();
-            await client.rPush('emails', JSON.stringify({ to: adminEmail, from: currentUser.username, content: emailContent }));
-            await client.quit();
+            localStorage.setItem('emails', JSON.stringify(emails));
             document.getElementById('adminEmailInput').value = "";
             alert("電子郵件已發送！");
         }
 
-        async function viewUsers() {
-            const userList = document.getElementById('userList');
+        function viewUsers() {
+            const userList = document.getElementById('messagesContainer');
             userList.innerHTML = ""; // 清空用戶列表
             for (const username in registeredUsers) {
-                const userItem = document.createElement('li');
+                const userItem = document.createElement('div');
                 userItem.textContent = `${username} - 點數: ${registeredUsers[username].points}`;
                 userList.appendChild(userItem);
             }
-            toggleVisibility('userList', true);
+            toggleVisibility('messagesContainer', true);
         }
 
-        async function addRedeemItem() {
+        function addRedeemItem() {
             const itemName = document.getElementById('itemName').value.trim();
             const itemCost = parseInt(document.getElementById('itemCost').value);
             if (itemName && itemCost > 0) {
                 redeemItems[itemName] = { cost: itemCost, used: false };
-                const client = await connectRedis();
-                await client.hSet('redeemItems', itemName, JSON.stringify(redeemItems[itemName]));
-                await client.quit();
                 alert(`新增可兌換物品 ${itemName}，所需點數: ${itemCost}`);
                 displayRedeemItems();
             } else {
@@ -311,22 +257,16 @@
             }
         }
 
-        async function deleteRedeemItem() {
+        function deleteRedeemItem() {
             const itemName = document.getElementById('deleteItemName').value.trim();
             if (itemName in redeemItems) {
                 delete redeemItems[itemName];
-                const client = await connectRedis();
-                await client.hDel('redeemItems', itemName);
-                await client.quit();
                 alert(`刪除可兌換物品 ${itemName}`);
                 displayRedeemItems();
             } else {
                 alert("物品不存在！");
             }
         }
-
-        // 載入資料
-        loadData();
     </script>
 </body>
 </html>
