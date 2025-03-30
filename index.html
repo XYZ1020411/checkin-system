@@ -3,270 +3,244 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>兌換系統</title>
+    <title>私人 AI 程式員助手</title>
     <style>
-        body { font-family: Arial, sans-serif; background-color: #ffcccc; color: #333; margin: 0; padding: 0; }
-        .container { background: #fff; border-radius: 8px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2); margin: 20px auto; padding: 20px; max-width: 400px; }
-        h2 { text-align: center; color: #b30000; }
-        input, textarea { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px; }
-        button { background-color: #FFD700; color: black; border: none; padding: 10px; border-radius: 4px; cursor: pointer; width: 100%; margin: 5px 0; transition: background-color 0.3s; }
-        button:hover { background-color: #FFC300; }
-        .hidden { display: none; }
-        .cart-item { background: #e6ffe6; padding: 10px; margin: 5px 0; border-radius: 4px; }
-        .message-item { background: #f9f9f9; padding: 10px; margin: 5px 0; border-radius: 4px; }
-        .reply-item { background: #e6f7ff; padding: 10px; margin: 5px 0; border-radius: 4px; border-left: 4px solid #007bff; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 20px 0;
+            text-align: center;
+            border-radius: 5px;
+            margin-bottom: 30px;
+        }
+        h1 {
+            margin: 0;
+        }
+        .chat-container {
+            background-color: white;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .chat-history {
+            height: 500px;
+            overflow-y: auto;
+            padding: 20px;
+        }
+        .message {
+            margin-bottom: 15px;
+            padding: 10px 15px;
+            border-radius: 18px;
+            max-width: 80%;
+        }
+        .user-message {
+            background-color: #e3f2fd;
+            margin-left: auto;
+            border-bottom-right-radius: 5px;
+        }
+        .ai-message {
+            background-color: #f1f1f1;
+            margin-right: auto;
+            border-bottom-left-radius: 5px;
+        }
+        .input-area {
+            display: flex;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-top: 1px solid #eee;
+        }
+        #user-input {
+            flex: 1;
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            outline: none;
+            font-size: 16px;
+        }
+        #send-button {
+            background-color: #2c3e50;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 10px 20px;
+            margin-left: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        #send-button:hover {
+            background-color: #1a252f;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 10px;
+            color: #666;
+        }
+        .typing-indicator {
+            display: inline-block;
+        }
+        .typing-indicator span {
+            height: 10px;
+            width: 10px;
+            background-color: #666;
+            border-radius: 50%;
+            display: inline-block;
+            margin: 0 2px;
+            animation: bounce 1.5s infinite ease-in-out;
+        }
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        @keyframes bounce {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-5px); }
+        }
     </style>
 </head>
 <body>
-    <div class="container" id="loginContainer">
-        <h2>登錄</h2>
-        <input type="text" id="username" placeholder="用戶名">
-        <input type="password" id="password" placeholder="密碼">
-        <button onclick="login()">登錄</button>
-        <button onclick="toggleVisibility('registerContainer', true)">註冊</button>
-    </div>
-
-    <div class="container hidden" id="registerContainer">
-        <h2>註冊</h2>
-        <input type="text" id="newUsername" placeholder="用戶名">
-        <input type="password" id="newPassword" placeholder="密碼">
-        <button onclick="register()">註冊</button>
-        <button onclick="toggleVisibility('registerContainer', false)">返回登錄</button>
-    </div>
-
-    <div class="container hidden" id="customerContainer">
-        <h2>客戶功能</h2>
-        <button onclick="checkIn()">每日簽到</button>
-        <button onclick="viewPoints()">查看點數</button>
-        <h3>可兌換物品</h3>
-        <div id="redeemItemsContainer"></div>
-        <h3>購物車</h3>
-        <div id="cartContainer"></div>
-        <button onclick="checkout()">結帳</button>
-        <h3>刮刮樂</h3>
-        <div id="scratchCard" onclick="scratchCard(event)"><div class="scratch-layer"></div><div id="scratchResult"></div></div>
-        <h3>AI 客服</h3>
-        <textarea id="customerMessageInput" placeholder="請輸入您的訊息..."></textarea>
-        <button onclick="sendMessage()">發送訊息</button>
-        <p id="customerResponse"></p>
-        <h3>電子郵件</h3>
-        <input type="text" id="friendUsername" placeholder="請輸入朋友的帳號">
-        <textarea id="customerEmailInput" placeholder="請輸入電子郵件內容..."></textarea>
-        <button onclick="sendEmail()">發送電子郵件</button>
-        <h3>兌換碼</h3>
-        <input type="text" id="redeemCode" placeholder="輸入兌換碼">
-        <button onclick="redeemWithCode()">兌換碼兌換</button>
-        <p id="customerMessage"></p>
-    </div>
-
-    <div class="container hidden" id="adminContainer">
-        <h2>管理員功能</h2>
-        <button onclick="viewUsers()">查看所有用戶</button>
-        <h3>客服訊息</h3>
-        <div id="messagesContainer"></div>
-        <h3>回覆訊息</h3>
-        <textarea id="replyMessageInput" placeholder="輸入回覆內容..."></textarea>
-        <button onclick="replyMessage()">回覆</button>
-        <input type="hidden" id="currentMessageId">
-        <h3>新增可兌換物品</h3>
-        <input type="text" id="itemName" placeholder="物品名稱">
-        <input type="number" id="itemCost" placeholder="所需點數" min="1">
-        <button onclick="addRedeemItem()">新增物品</button>
-        <h3>刪除可兌換物品</h3>
-        <input type="text" id="deleteItemName" placeholder="物品名稱">
-        <button onclick="deleteRedeemItem()">刪除物品</button>
-        <h3>電子郵件系統</h3>
-        <div id="adminEmailContainer"></div>
-        <textarea id="adminEmailInput" placeholder="請輸入電子郵件內容..."></textarea>
-        <button onclick="sendAdminEmail()">發送電子郵件</button>
+    <div class="container">
+        <header>
+            <h1>私人 AI 程式員助手</h1>
+        </header>
+        
+        <div class="chat-container">
+            <div class="chat-history" id="chat-history">
+                <div class="message ai-message">
+                    您好！我是您的私人 AI 程式員助手。我可以幫助您解決編程問題、解釋代碼、優化算法等。請問今天有什麼我可以幫助您的嗎？
+                </div>
+            </div>
+            
+            <div class="input-area">
+                <input type="text" id="user-input" placeholder="輸入您的編程問題..." autocomplete="off">
+                <button id="send-button">發送</button>
+            </div>
+            
+            <div class="loading" id="loading">
+                <div class="typing-indicator">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+                AI 正在思考...
+            </div>
+        </div>
     </div>
 
     <script>
-        let currentUser = null;
-        let redeemItems = { "商品A": { cost: 20, used: false }, "商品B": { cost: 50, used: false }, "商品C": { cost: 30, used: false } };
-        let cart = [];
-        let registeredUsers = JSON.parse(localStorage.getItem('registeredUsers')) || {};
-        let messages = JSON.parse(localStorage.getItem('messages')) || [];
-        let emails = JSON.parse(localStorage.getItem('emails')) || []; // 儲存電子郵件
-
-        function toggleVisibility(containerId, isVisible) {
-            document.getElementById(containerId).classList.toggle('hidden', !isVisible);
-        }
-
-        function login() {
-            const username = document.getElementById('username').value.trim();
-            const password = document.getElementById('password').value.trim();
-            if (!username || !password) return alert("請輸入用戶名和密碼！");
-            if (username === "xyz1020411" && password === "xyz1020411") {
-                currentUser = { username, points: 100, isAdmin: true };
-            } else if (registeredUsers[username] && registeredUsers[username].password === password) {
-                currentUser = { username, ...registeredUsers[username] };
-            } else {
-                return alert("用戶名或密碼錯誤！");
-            }
-            toggleVisibility('loginContainer', false);
-            toggleVisibility(currentUser.isAdmin ? 'adminContainer' : 'customerContainer', true);
-            displayRedeemItems();
-        }
-
-        function register() {
-            const username = document.getElementById('newUsername').value.trim();
-            const password = document.getElementById('newPassword').value.trim();
-            if (!username || !password) return alert("請輸入用戶名和密碼！");
-            if (registeredUsers[username]) return alert("用戶名已存在！");
-            const email = username + "@example.com"; // 根據用戶名生成電子郵件
-            registeredUsers[username] = { password, email, points: 0 };
-            localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers));
-            alert("註冊成功！");
-            toggleVisibility('registerContainer', false);
-        }
-
-        function checkIn() {
-            const today = new Date().toDateString();
-            if (currentUser.lastCheckIn === today) return alert("您今天已經簽到過了！");
-            currentUser.points += 100;
-            currentUser.lastCheckIn = today;
-            localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers));
-            alert("簽到成功！您獲得了100點數！");
-        }
-
-        function viewPoints() {
-            alert(`您的當前點數: ${currentUser.points}`);
-        }
-
-        function displayRedeemItems() {
-            const container = document.getElementById('redeemItemsContainer');
-            container.innerHTML = "";
-            for (const [itemName, itemData] of Object.entries(redeemItems)) {
-                const itemDiv = document.createElement('div');
-                itemDiv.textContent = `${itemName} - ${itemData.cost} 點數`;
-                itemDiv.onclick = () => addToCart(itemName, itemData.cost);
-                container.appendChild(itemDiv);
-            }
-        }
-
-        function addToCart(itemName, itemCost) {
-            if (currentUser.points < itemCost) return alert("點數不足！");
-            cart.push({ name: itemName, cost: itemCost });
-            displayCart();
-            alert(`${itemName} 已加入購物車！`);
-        }
-
-        function displayCart() {
-            const cartContainer = document.getElementById('cartContainer');
-            cartContainer.innerHTML = "";
-            cart.forEach(item => {
-                const cartItemDiv = document.createElement('div');
-                cartItemDiv.className = 'cart-item';
-                cartItemDiv.textContent = `${item.name} - ${item.cost} 點數`;
-                cartContainer.appendChild(cartItemDiv);
-            });
-        }
-
-        function checkout() {
-            if (cart.length === 0) return alert("購物車是空的！");
-            let totalCost = cart.reduce((sum, item) => sum + item.cost, 0);
-            if (currentUser.points < totalCost) return alert("點數不足，無法結帳！");
-            cart.forEach(item => {
-                currentUser.points -= item.cost;
-                redeemItems[item.name].used = true;
-            });
-            alert("結帳成功！");
-            localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers));
-            cart = [];
-            displayCart();
-            displayRedeemItems();
-        }
-
-        function scratchCard(event) {
-            if (currentUser.scratchUsed) return alert("您今天已經使用過刮刮樂了！");
-            const scratchLayer = document.querySelector('.scratch-layer');
-            scratchLayer.style.background = 'transparent'; // 刮開後變透明
-            const pointsArray = [10, 20, 30, 50, 100];
-            const randomIndex = Math.floor(Math.random() * pointsArray.length);
-            const pointsWon = pointsArray[randomIndex];
-            currentUser.points += pointsWon; // 增加點數
-            document.getElementById('scratchResult').innerText = `恭喜！您贏得了 ${pointsWon} 點數！`;
-            currentUser.scratchUsed = true; // 標記為已使用
-            localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers));
-        }
-
-        async function sendMessage() {
-            const messageContent = document.getElementById('customerMessageInput').value.trim();
-            if (!messageContent) return alert("請輸入訊息！");
+        // 替換為您的實際 API 密鑰
+        const API_KEY = 'sk-b5e5ac23f269414b9a4acbf953db2379';
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            const chatHistory = document.getElementById('chat-history');
+            const userInput = document.getElementById('user-input');
+            const sendButton = document.getElementById('send-button');
+            const loadingIndicator = document.getElementById('loading');
             
-            // 將訊息發送到 AI 客服 API
-            const response = await fetch('https://your-ai-api-endpoint.com/send-message', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ from: currentUser.username, content: messageContent })
-            });
-
-            const data = await response.json();
-            document.getElementById('customerMessageInput').value = "";
-            document.getElementById('customerResponse').innerText = `AI 回覆: ${data.reply}`;
-            alert("訊息已發送給管理員！");
-        }
-
-        function sendEmail() {
-            const emailContent = document.getElementById('customerEmailInput').value.trim();
-            const friendUsername = document.getElementById('friendUsername').value.trim();
-            if (!emailContent) return alert("請輸入電子郵件內容！");
-            if (!friendUsername) return alert("請輸入朋友的帳號！");
+            // 發送消息函數
+            function sendMessage() {
+                const message = userInput.value.trim();
+                if (message === '') return;
+                
+                // 添加用戶消息到聊天歷史
+                addMessage(message, 'user');
+                userInput.value = '';
+                
+                // 顯示加載指示器
+                loadingIndicator.style.display = 'block';
+                
+                // 滾動到底部
+                scrollToBottom();
+                
+                // 調用 AI API
+                callAIAPI(message);
+            }
             
-            const friend = registeredUsers[friendUsername];
-            if (!friend) return alert("朋友的帳號不存在！");
-
-            emails.push({ to: friend.email, from: currentUser.username, content: emailContent });
-            localStorage.setItem('emails', JSON.stringify(emails));
-            document.getElementById('customerEmailInput').value = "";
-            document.getElementById('friendUsername').value = ""; // 清空朋友帳號輸入框
-            alert(`電子郵件已發送給 ${friendUsername}！`);
-        }
-
-        function sendAdminEmail() {
-            const emailContent = document.getElementById('adminEmailInput').value.trim();
-            if (!emailContent) return alert("請輸入電子郵件內容！");
-            const adminEmail = "admin@example.com"; // 管理員電子郵件
-            emails.push({ to: adminEmail, from: currentUser.username, content: emailContent });
-            localStorage.setItem('emails', JSON.stringify(emails));
-            document.getElementById('adminEmailInput').value = "";
-            alert("電子郵件已發送！");
-        }
-
-        function viewUsers() {
-            const userList = document.getElementById('messagesContainer');
-            userList.innerHTML = ""; // 清空用戶列表
-            for (const username in registeredUsers) {
-                const userItem = document.createElement('div');
-                userItem.textContent = `${username} - 點數: ${registeredUsers[username].points}`;
-                userList.appendChild(userItem);
+            // 添加消息到聊天歷史
+            function addMessage(text, sender) {
+                const messageDiv = document.createElement('div');
+                messageDiv.classList.add('message');
+                messageDiv.classList.add(sender === 'user' ? 'user-message' : 'ai-message');
+                messageDiv.textContent = text;
+                chatHistory.appendChild(messageDiv);
+                
+                scrollToBottom();
             }
-            toggleVisibility('messagesContainer', true);
-        }
-
-        function addRedeemItem() {
-            const itemName = document.getElementById('itemName').value.trim();
-            const itemCost = parseInt(document.getElementById('itemCost').value);
-            if (itemName && itemCost > 0) {
-                redeemItems[itemName] = { cost: itemCost, used: false };
-                alert(`新增可兌換物品 ${itemName}，所需點數: ${itemCost}`);
-                displayRedeemItems();
-            } else {
-                alert("請輸入有效的物品名稱和點數！");
+            
+            // 滾動到底部
+            function scrollToBottom() {
+                chatHistory.scrollTop = chatHistory.scrollHeight;
             }
-        }
-
-        function deleteRedeemItem() {
-            const itemName = document.getElementById('deleteItemName').value.trim();
-            if (itemName in redeemItems) {
-                delete redeemItems[itemName];
-                alert(`刪除可兌換物品 ${itemName}`);
-                displayRedeemItems();
-            } else {
-                alert("物品不存在！");
+            
+            // 調用 AI API
+            async function callAIAPI(prompt) {
+                try {
+                    const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${API_KEY}`
+                        },
+                        body: JSON.stringify({
+                            model: 'deepseek-chat',
+                            messages: [
+                                {
+                                    role: 'system',
+                                    content: '你是一個專業的程式員助手，擅長多種編程語言包括 Python、JavaScript、Java、C++ 等。請用清晰、專業的方式回答技術問題，並提供實用的代碼示例。'
+                                },
+                                {
+                                    role: 'user',
+                                    content: prompt
+                                }
+                            ],
+                            temperature: 0.7,
+                            max_tokens: 2000
+                        })
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`API 請求失敗: ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
+                    const aiResponse = data.choices[0].message.content;
+                    
+                    // 添加 AI 回應到聊天歷史
+                    addMessage(aiResponse, 'ai');
+                } catch (error) {
+                    console.error('API 調用錯誤:', error);
+                    addMessage('抱歉，處理您的請求時出錯了。請稍後再試。', 'ai');
+                } finally {
+                    // 隱藏加載指示器
+                    loadingIndicator.style.display = 'none';
+                    scrollToBottom();
+                }
             }
-        }
+            
+            // 事件監聽器
+            sendButton.addEventListener('click', sendMessage);
+            userInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+        });
     </script>
 </body>
 </html>
